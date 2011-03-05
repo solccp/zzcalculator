@@ -8,6 +8,7 @@ subroutine sum_polynomials(pah,daughter1,daughter2,daughter3,ring_exists)
 !  ZZ(pah) = ZZ(daughter1) + ZZ(daughter2) + x * ZZ(daughter3)
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i
   type(structure) :: pah,daughter1,daughter2,daughter3
@@ -65,6 +66,7 @@ subroutine multiply_polynomials(pah,son1,son2)
 ! by multiplying the ZZ polynomial of the son structures: son1 & son2
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: deg1,deg2,i,j
   type(structure) :: pah,son1,son2

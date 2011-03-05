@@ -11,6 +11,7 @@ program zhang_polynomial
 !   Polycyclic Aromatic Compounds 26 pp.17-35, 2006
 !
   use types_module
+  use structure_module
   implicit none
   integer(kint) :: i,nhex,level=0
   integer(kint),allocatable,dimension(:,:) :: lista

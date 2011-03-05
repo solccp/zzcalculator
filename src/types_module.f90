@@ -12,23 +12,6 @@ module types_module
     integer(kind=4),private :: tabl(40)
   end type vlonginteger
 
-  type,public :: structure
-    integer(kint) :: nat
-    integer(kint),allocatable,dimension(:) :: initiallabel
-    integer(kint),allocatable,dimension(:) :: neighbornumber
-    integer(kint),allocatable,dimension(:,:) :: neighborlist
-    integer(kint),allocatable,dimension(:) :: indexmapping
-    integer(kint) :: order
-    type(vlonginteger),allocatable,dimension(:) :: polynomial
-    integer(kint), allocatable,dimension(:,:) :: bondlist
-    integer(kint) :: nbondlistentries
-    integer(kint) :: doublebondnumber
-    integer(kint), allocatable, dimension(:,:) :: doublebondlist
-    integer(kint) :: ringnumber
-    integer(kint), allocatable, dimension(:,:) :: ringlist
-    logical :: hasDisconnectedParent
-    integer :: storage_unit
-  end type structure
 
 contains
 

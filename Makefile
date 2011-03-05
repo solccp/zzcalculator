@@ -4,14 +4,14 @@ MODDIR := obj/
 BINDIR := bin/
 
 FC := ifort
-FFLAGS := -ipo -O3 -funroll-loops -no-prec-div -module ${MODDIR} -pg
-#FFLAGS := -g3 -O0 -module ${MODDIR} -trace -check all -debug all
+#FFLAGS := -ipo -O3 -funroll-loops -no-prec-div -module ${MODDIR} -pg
+FFLAGS := -g3 -O0 -module ${MODDIR} -trace -check all -debug all
 
 LDFLAGS := -static -lpthread
 # -debug all
 #LDFLAGS := -static -lmkl_em64t -lguide -lpthread
 
-COMMON_FILES := types_module output
+COMMON_FILES := types_module structure output 
 ZHANG_FILES := zhang input functions daughters findZZ polynomial decompose operators print hexagon
 
 COMMON_SRCS := $(addsuffix .f90, ${COMMON_FILES})

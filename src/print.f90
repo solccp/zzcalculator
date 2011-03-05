@@ -8,6 +8,7 @@ subroutine print_ZZ_polynomial(pah)
 ! displayed at stdout
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i,cpos
   type(vlonginteger) :: total
@@ -77,6 +78,7 @@ subroutine print_int_in_string(pos,string,val)
 ! prints integer val in the string at position pos
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: val,pos
   character(len=500) :: string

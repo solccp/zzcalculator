@@ -3,6 +3,7 @@ module output
 contains
     subroutine write_connections(pah)
         use types_module
+        use structure_module
         type(structure), intent(in) :: pah
         integer :: i
         integer, save :: output_index = 0
@@ -36,6 +37,7 @@ contains
     end function
     subroutine write_connections_partial(pah)
         use types_module
+        use structure_module
         type(structure), intent(in) :: pah
         logical :: inuse
         integer :: i
@@ -58,6 +60,7 @@ contains
 
     subroutine combine_connection_output(pah, son1, son2)
         use types_module
+        use structure_module
         type(structure), intent(in) :: pah, son1, son2
         type(structure) :: temp
         integer :: ndb, nring

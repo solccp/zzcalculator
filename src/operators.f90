@@ -1,67 +1,73 @@
 !######################## subroutine cut_dangling_bonds #############################
 !####################################################################################
-recursive subroutine cut_dangling_bonds(pah)
+subroutine cut_dangling_bonds(pah)
 !
 ! removes all dangling bonds from a given polycyclic benzenoid structure (pah)
 ! the dangling bond is defined via a single connected atom
 ! a structure without singly connected atoms does not have dangling bonds
 !
-  use types_module
-  implicit none
-  integer(kint) :: atom1,atom2, atom3, atom4,i,j,k,m,nelim
-  integer(kint),dimension(maxatoms) :: atoms
-  type(structure) :: pah,pah1
-  logical :: has_dangling_bonds
-  nelim=0
+    use types_module
+    use structure_module
+    implicit none
+    type(structure), intent(inout) :: pah
+
+    integer(kint) :: atom1,atom2, atom3, atom4,i,j,k,m,nelim
+    integer(kint), dimension(:), allocatable :: atoms
+    type(structure) :: pah1
+    logical :: has_dangling_bonds
+
+    nelim=0
+    allocate(atoms(pah%nat))
 
 ! ############################
 ! # eliminate dangling bonds #
 ! ############################
-  has_dangling_bonds=.true.
-  do while (has_dangling_bonds)
-    call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
-    if (has_dangling_bonds) then
-      atom2=pah%neighborlist(atom1,1)
-      do i=1,pah%neighbornumber(atom2)
-        atom3=pah%neighborlist(atom2,i)
-        if (atom3 /= atom1) then
-          k=0
-          do j=1,pah%neighbornumber(atom3)
-            atom4=pah%neighborlist(atom3,j)
-            if (atom4 /= atom2) then
-              k=k+1
-              pah%neighborlist(atom3,k)=atom4
-            end if
-          end do
-          pah%neighbornumber(atom3)=k
+    has_dangling_bonds=.true.
+    do while (has_dangling_bonds)
+        call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
+        if (has_dangling_bonds) then
+            atom2 = pah%neighborlist(atom1,1)
+            do i=1, pah%neighbornumber(atom2)
+                atom3 = pah%neighborlist(atom2,i)
+                if (atom3 /= atom1) then
+                    k=0
+                    do j=1, pah%neighbornumber(atom3)
+                        atom4 = pah%neighborlist(atom3,j)
+                        if (atom4 /= atom2) then
+                            k=k+1
+                            pah%neighborlist(atom3,k) = atom4
+                        end if
+                    end do
+                    pah%neighbornumber(atom3) = k
+                end if
+            end do
+            pah%neighbornumber(atom1) = 0
+            pah%neighbornumber(atom2) = 0
+            pah%neighborlist(atom1,1:3) = 0
+            pah%neighborlist(atom2,1:3) = 0
+            atoms(nelim+1)=atom1
+            atoms(nelim+2)=atom2
+            nelim=nelim+2
         end if
-      end do
-      pah%neighbornumber(atom1)=0
-      pah%neighbornumber(atom2)=0
-      pah%neighborlist(atom1,1:3)=0
-      pah%neighborlist(atom2,1:3)=0
-      atoms(nelim+1)=atom1
-      atoms(nelim+2)=atom2
-      nelim=nelim+2
-    end if
-  end do
+    end do
 
 ! ###############################
 ! # return if no dangling atoms #
 ! ###############################
-  if (nelim == 0) then
-    return
-  end if
+    if (nelim == 0) then
+        return
+    end if
 
 ! ##########################################
 ! # otherwise create the reduced structure #
 ! ##########################################
-  call create_noatoms_daughter(pah,pah1,nelim,atoms)
-  pah=pah1
-  deallocate(pah1%neighbornumber)
-  deallocate(pah1%neighborlist)
-  if (pah1%nbondlistentries > 0) deallocate(pah1%bondlist)
-  return
+    call create_noatoms_daughter(pah,pah1,nelim,atoms,.false.)
+    pah = pah1
+    deallocate(pah1%neighbornumber)
+    deallocate(pah1%neighborlist)
+    if (pah1%nbondlistentries > 0) deallocate(pah1%bondlist)
+    deallocate(atoms)
+    return
 
 end subroutine cut_dangling_bonds
 !####################################################################################
@@ -77,6 +83,7 @@ subroutine check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
 ! has dangling bonds
 !
   use types_module
+    use structure_module
   implicit none
   logical :: has_dangling_bonds
   integer(kint) :: atom1,i
@@ -105,6 +112,7 @@ subroutine find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
 ! finds an aromatic ring containing atoms: atom1, atom2, and atom3
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i,j,k,l
   integer(kint) :: atom1,atom2,atom3,atom4,atom5,atom6
@@ -161,6 +169,7 @@ subroutine find_edge_ring(pah,sextet,atom1,atom2,ring_exists)
 ! finds an aromatic ring containing atoms: atom1 and atom2
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i,j,k,l,m
   integer(kint) :: atom1,atom2,atom3,atom4,atom5,atom6
@@ -229,11 +238,15 @@ subroutine check_if_connected(pah,medat)
 !   disconnected) in the remaining positions
 !
   use types_module
+    use structure_module
   implicit none
   type(structure) :: pah,pah1
   integer(kint) :: i,j,k,medat,lnat,start
-  integer(kint),dimension(maxatoms) :: map
-  logical, dimension(maxatoms) :: visit_list
+  integer(kint), dimension(:), allocatable :: map
+  logical, dimension(:), allocatable :: visit_list
+
+  allocate(map(pah%nat))
+  allocate(visit_list(pah%nat))
 
 ! #########################################################
 ! # find the connected cluster of atoms containing atom 1 #
@@ -296,6 +309,9 @@ subroutine check_if_connected(pah,medat)
       pah%bondlist(j,i)=map(pah%bondlist(j,i))
     end forall
   end if
+
+  deallocate(map)
+  deallocate(visit_list)
   return
 
 end subroutine check_if_connected
@@ -312,6 +328,7 @@ subroutine dfs(pah,nat,visit_list,lnat)
 ! to atom 1 via a sequence of bonds, then visit_list(k)=.true.; otherwise, visit_list(k)=.false.
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i
   integer(kint), intent(inout) :: lnat
@@ -352,6 +369,7 @@ subroutine bfs(pah,nat,visit_list,lnat)
 ! to atom 1 via a sequence of bonds, then visit_list(k)=.true.; otherwise, visit_list(k)=.false.
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i
   integer(kint), intent(inout) :: lnat
@@ -398,6 +416,7 @@ recursive subroutine split_and_decompose(pah,medat,level)
 !
   use types_module
   use output
+    use structure_module
   implicit none
   integer(kint) :: medat,i,j,level
   type(structure) :: pah,son1,son2
@@ -537,6 +556,7 @@ subroutine select_edge_bond(pah,atom1,atom2)
 ! carbon atoms are surounded maximally by 2 hexagons
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i,j,atom1,atom2,atom3,sextet(6)
   type(structure) :: pah
@@ -613,6 +633,7 @@ subroutine clean_bond_list(pah)
 ! valid entries, i.e. not existing atoms & not existing bonds
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i,j
   type(structure) :: pah,pah1
@@ -664,6 +685,7 @@ logical function are_neighbors(pah,atom1,atom2)
 ! otherwise, return .false.
 !
   use types_module
+    use structure_module
   implicit none
   integer(kint) :: i,atom1,atom2
   type(structure) :: pah
