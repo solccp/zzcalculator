@@ -1,6 +1,6 @@
 !############################ subroutine read_input #################################
 !####################################################################################
-subroutine read_input(pah)
+subroutine read_input(input_fname,pah)
 !
 ! read the geometry of a polycyclic benzenoid structure pah from the file 'geometry',
 ! filter out only the carbon atoms, and create the topological matrix for it
@@ -8,6 +8,7 @@ subroutine read_input(pah)
     use types_module
     use structure_module
     implicit none
+    character(len=*), intent(in) :: input_fname
     type(structure), intent(inout) :: pah
 
     integer(kind=4) :: info
@@ -27,7 +28,8 @@ subroutine read_input(pah)
     ! ######################
     ! # read geometry file #
     ! ######################
-    open(20,file='geometry')
+    !open(20,file='geometry')
+    open(20,file=trim(input_fname))
     read(20,*) bnat
     read(20,*)
     allocate(geom(3,bnat))
@@ -129,38 +131,38 @@ subroutine read_input(pah)
     ! #########################################################
     ! # find all substructures with removed one aromatic ring #
     ! #########################################################
-    allocate(lista(6,pah%nat))
-    call find_all_hexagons(pah%nat,pah,nhex,lista)
-    open(22,file='new.geometries')
-    do i=1,nhex
-        inertia=0.0d0
-        do l=1,pah%nat
-            inlist=.false.
-            do m=1,6
-                if (l == lista(m,i)) inlist=.true.
-            end do
-            if (inlist) cycle
-            do j=1,3
-                do k=1,3
-                    inertia(j,k)=inertia(j,k)+geom(j,l)*geom(k,l)
-                end do
-            end do
-        end do
-        write(22,'(i6)')pah%nat
-        write(22,'(1x,4i6,3f15.3)')pah%nat,0,0,0,inertia(1,1)+inertia(2,2)+inertia(3,3)
-        do j=1,pah%nat
-            inlist=.false.
-            do k=1,6
-                if (j == lista(k,i)) inlist=.true.
-            end do
-            if (inlist) then
-                write(22,'(a,3f20.10)')"B",(geom(k,j),k=1,3) 
-            else
-                write(22,'(a,3f20.10)')"C",(geom(k,j),k=1,3) 
-            end if
-        end do
-    end do
-    close(22)
+!    allocate(lista(6,pah%nat))
+!    call find_all_hexagons(pah%nat,pah,nhex,lista)
+!    open(22,file='new.geometries')
+!    do i=1,nhex
+!        inertia=0.0d0
+!        do l=1,pah%nat
+!            inlist=.false.
+!            do m=1,6
+!                if (l == lista(m,i)) inlist=.true.
+!            end do
+!            if (inlist) cycle
+!            do j=1,3
+!                do k=1,3
+!                    inertia(j,k)=inertia(j,k)+geom(j,l)*geom(k,l)
+!                end do
+!            end do
+!        end do
+!        write(22,'(i6)')pah%nat
+!        write(22,'(1x,4i6,3f15.3)')pah%nat,0,0,0,inertia(1,1)+inertia(2,2)+inertia(3,3)
+!        do j=1,pah%nat
+!            inlist=.false.
+!            do k=1,6
+!                if (j == lista(k,i)) inlist=.true.
+!            end do
+!            if (inlist) then
+!                write(22,'(a,3f20.10)')"B",(geom(k,j),k=1,3) 
+!            else
+!                write(22,'(a,3f20.10)')"C",(geom(k,j),k=1,3) 
+!            end if
+!        end do
+!    end do
+!    close(22)
     return
 
 end subroutine read_input

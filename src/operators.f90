@@ -63,14 +63,7 @@ subroutine cut_dangling_bonds(pah)
 ! ##########################################
     call create_noatoms_daughter(pah,pah1,nelim,atoms,.false.)
     pah = pah1
-    if (allocated(pah1%neighbornumber)) then
-        deallocate(pah1%neighbornumber)
-    end if
-    if (allocated(pah1%neighborlist)) then
-        deallocate(pah1%neighborlist)
-    end if
-
-    if (pah1%nbondlistentries > 0) deallocate(pah1%bondlist)
+    call destory(pah1)
     deallocate(atoms)
     return
 
@@ -500,19 +493,8 @@ subroutine split_and_decompose(pah,medat,level)
 ! #################################
 ! # deallocate the son structures #
 ! #################################
-    deallocate(son1%neighbornumber)
-    deallocate(son1%neighborlist)
-    deallocate(son1%polynomial)
-    deallocate(son2%neighbornumber)
-    deallocate(son2%neighborlist)
-    deallocate(son2%polynomial)
-    if (son1%nbondlistentries > 0) deallocate(son1%bondlist)
-    if (son2%nbondlistentries > 0) deallocate(son2%bondlist)
-
-    deallocate(son1%doublebondlist)
-    deallocate(son1%ringlist)
-    deallocate(son2%doublebondlist)
-    deallocate(son2%ringlist)
+    call destory(son1)
+    call destory(son2)
     return
 
 end subroutine split_and_decompose

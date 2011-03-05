@@ -69,25 +69,10 @@ subroutine decompose(pah,level)
 ! ##################################
 ! # deallocate daughter structures #
 ! ##################################
-    deallocate(bond%neighbornumber)
-    deallocate(corners%neighbornumber)
-    deallocate(bond%neighborlist)
-    deallocate(corners%neighborlist)
-    deallocate(bond%polynomial)
-    deallocate(corners%polynomial)
+    call destory(bond)
+    call destory(corners)
     if (ring_exists) then
-        deallocate(ring%neighbornumber)
-        deallocate(ring%neighborlist)
-        deallocate(ring%polynomial)
-        if (ring%nbondlistentries > 0) then
-            deallocate(ring%bondlist)
-        end if
-    end if
-    if (bond%nbondlistentries > 0) then
-        deallocate(bond%bondlist)
-    end if
-    if (corners%nbondlistentries > 0) then
-        deallocate(corners%bondlist)
+        call destory(ring)
     end if
 
 end subroutine decompose
