@@ -5,9 +5,10 @@ contains
         use types_module
         use structure_module
         type(structure), intent(in) :: pah
-        integer :: i
-        integer, save :: output_index = 0
-        
+        integer(kint) :: i
+        integer(kint), save :: output_index = 0
+   
+        return     
         output_index = output_index +1
         write(*,*) 'writing structure ', output_index
         write(*,*) 'number of atoms: ', pah%doublebondnumber*2+pah%ringnumber*6
@@ -20,7 +21,7 @@ contains
         if (pah%ringnumber > 0) then
             write(*,*) 'ring:'
             do i=1, pah%ringnumber
-                write(*,'(999(I,X))') pah%ringlist(:,i)
+                write(*,'(999(I5,X))') pah%ringlist(:,i)
             end do
         end if
         write(*,*) "===================================================="
@@ -30,7 +31,7 @@ contains
         logical :: inuse 
         inuse = .true. 
         getunit = 0
-        do while (inuse == .true.) 
+        do while (inuse) 
             getunit = getunit + 1 
             INQUIRE(UNIT = getunit, OPENED = inuse) 
         end do 
@@ -64,7 +65,7 @@ contains
         type(structure), intent(in) :: pah, son1, son2
         type(structure) :: temp
         integer :: ndb, nring
-        integer :: i,j, k1, k2
+        integer :: i,j
         integer :: indexes(6)
         integer :: errorcode
 
@@ -76,7 +77,6 @@ contains
         temp%ringnumber = pah%ringnumber
         temp%doublebondnumber = pah%doublebondnumber
 
-        k1 = 1
         rewind(son1%storage_unit)
         do
             temp%ringnumber = pah%ringnumber
@@ -93,14 +93,12 @@ contains
                 temp%ringnumber = temp%ringnumber+1
                 temp%ringlist(:,temp%ringnumber) = indexes(1:6)
             end do
-            k2 = 1
             rewind(son2%storage_unit)
             do
                 temp%doublebondnumber = pah%doublebondnumber + ndb
                 temp%ringnumber = pah%ringnumber + nring
-                read(son2%storage_unit,*,end=100) ndb, nring
+                read(son2%storage_unit,*, iostat=errorcode) ndb, nring
                 if (errorcode /= 0) exit
-                print *,'k1,k2', k1,k2
                 do i=1, ndb
                     read(son2%storage_unit,*) indexes(1:2)
                     temp%doublebondnumber = temp%doublebondnumber+1
@@ -116,10 +114,8 @@ contains
                 else
                     call write_connections(temp)
                 end if        
-                k2 = k2 + 1
             end do
             100 continue
-            k1 = k1 + 1
         end do
 
         deallocate(temp%doublebondlist)

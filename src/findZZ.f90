@@ -19,7 +19,7 @@ subroutine find_ZZ_polynomial(pah,level)
     if (pah%nat == 0) then
         pah%order = 0
         allocate(pah%polynomial(pah%order+1))
-        pah%polynomial(1) = setvli(1)
+        pah%polynomial(1) = setvli(1_kint)
         if (pah%hasDisconnectedParent) then
             call write_connections_partial(pah)
         else
@@ -32,7 +32,7 @@ subroutine find_ZZ_polynomial(pah,level)
     else if (mod(pah%nat,2) == 1) then
         pah%order = 0
         allocate(pah%polynomial(pah%order+1))
-        pah%polynomial(1)=setvli(0)
+        pah%polynomial(1)=setvli(0_kint)
 
 ! ##########################################
 ! # check if the graph of pah is connected #

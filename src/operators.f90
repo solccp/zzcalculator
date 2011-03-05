@@ -63,8 +63,13 @@ subroutine cut_dangling_bonds(pah)
 ! ##########################################
     call create_noatoms_daughter(pah,pah1,nelim,atoms,.false.)
     pah = pah1
-    deallocate(pah1%neighbornumber)
-    deallocate(pah1%neighborlist)
+    if (allocated(pah1%neighbornumber)) then
+        deallocate(pah1%neighbornumber)
+    end if
+    if (allocated(pah1%neighborlist)) then
+        deallocate(pah1%neighborlist)
+    end if
+
     if (pah1%nbondlistentries > 0) deallocate(pah1%bondlist)
     deallocate(atoms)
     return
@@ -336,85 +341,44 @@ subroutine dfs(pah,nat,visit_list,lnat)
 ! find all atoms in structure pah that are connected to atom 1; if atom k is connected 
 ! to atom 1 via a sequence of bonds, then visit_list(k)=.true.; otherwise, visit_list(k)=.false.
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  integer(kint) :: i
-  integer(kint), intent(inout) :: lnat
-  integer(kint), intent(in) :: nat
-  type(structure) :: pah
-  integer(kint), dimension(0:nat) :: stack
-  logical, dimension(nat), intent(inout) :: visit_list
-  integer(kint) :: cur_index
+    implicit none
+    type(structure), intent(in) :: pah
+    integer(kint), intent(in) :: nat
+    logical, dimension(nat), intent(inout) :: visit_list
+    integer(kint), intent(inout) :: lnat
+    
+    integer(kint) :: i
+    integer(kint), dimension(0:nat) :: stack
+    integer(kint) :: cur_index
 
-  stack(0) = 1
-  stack(1) = 1
-  do while(stack(0) > 0)
-    cur_index = stack(stack(0))
-    stack(0) = stack(0) - 1
-    if (visit_list(cur_index) == .false.) then
-      visit_list(cur_index) = .true.
-      lnat = lnat + 1
-      do i = 1, pah%neighbornumber(cur_index)
-        if (visit_list(pah%neighborlist(cur_index, i)) == .false.) then
-            stack(0) = stack(0) + 1
-            stack(stack(0)) = pah%neighborlist(cur_index, i)
+    stack(0) = 1
+    stack(1) = 1
+    do while(stack(0) > 0)
+        cur_index = stack(stack(0))
+        stack(0) = stack(0) - 1
+        if (.not. visit_list(cur_index)) then
+            visit_list(cur_index) = .true.
+            lnat = lnat + 1
+            do i = 1, pah%neighbornumber(cur_index)
+                if (.not. visit_list(pah%neighborlist(cur_index, i))) then
+                    stack(0) = stack(0) + 1
+                    stack(stack(0)) = pah%neighborlist(cur_index, i)
+                end if
+            end do
         end if
-      end do
-    end if
-  end do
-  return
+    end do
+    return
 
 end subroutine dfs
 !####################################################################################
 !############################# end of subroutine dfs ################################
 
 
-!################################# subroutine dfs ###################################
-!####################################################################################
-subroutine bfs(pah,nat,visit_list,lnat)
-!
-! find all atoms in structure pah that are connected to atom 1; if atom k is connected 
-! to atom 1 via a sequence of bonds, then visit_list(k)=.true.; otherwise, visit_list(k)=.false.
-!
-  use types_module
-    use structure_module
-  implicit none
-  integer(kint) :: i
-  integer(kint), intent(inout) :: lnat
-  integer(kint), intent(in) :: nat
-  type(structure) :: pah
-  integer(kint), dimension(nat) :: stack
-  logical, dimension(nat), intent(inout) :: visit_list
-  integer(kint) :: cur_index, front_index, rear_index
-
-  front_index = 1
-  rear_index = 2
-  stack(1) = 1
-  do while(front_index < rear_index)
-    cur_index = front_index
-    front_index = front_index +1
-    if (visit_list(cur_index) == .false.) then
-      visit_list(cur_index) = .true.
-      lnat = lnat + 1
-      do i = 1, pah%neighbornumber(cur_index)
-        if (visit_list(pah%neighborlist(cur_index, i)) == .false.) then
-            stack(rear_index) = pah%neighborlist(cur_index, i)
-            rear_index = rear_index +1
-        end if
-      end do
-    end if
-  end do
-  return
-
-end subroutine bfs
-!####################################################################################
-!############################# end of subroutine dfs ################################
-
-
 !###################### subroutine split_and_decompose ##############################
 !####################################################################################
-recursive subroutine split_and_decompose(pah,medat,level)
+subroutine split_and_decompose(pah,medat,level)
 !
 ! split a disconnected polycyclic benzenoid structure pah into two substructures
 ! * son1 which is connected and contains (medat-1) atoms
@@ -423,128 +387,133 @@ recursive subroutine split_and_decompose(pah,medat,level)
 !
 !        ZZ(pah) = ZZ(son1) * ZZ(son2)
 !
-  use types_module
-  use output
+    use types_module
+    use output
     use structure_module
-  implicit none
-  integer(kint) :: medat,i,j,level
-  type(structure) :: pah,son1,son2
+    implicit none
+    
+    type(structure), intent(in) :: pah
+    integer(kint), intent(in) :: medat, level
+
+    integer(kint) :: i,j
+    type(structure) :: son1, son2
 
 ! ###############################
 ! # allocate the son structures #
 ! ###############################
-  son1%nat=medat-1
-  son1%nbondlistentries=pah%nbondlistentries
-  allocate(son1%neighbornumber(son1%nat))
-  allocate(son1%neighborlist(son1%nat,3))
-  son2%nat=pah%nat-medat+1
-  son2%nbondlistentries=pah%nbondlistentries
-  allocate(son2%neighbornumber(son2%nat))
-  allocate(son2%neighborlist(son2%nat,3))
-  if (pah%nbondlistentries > 0) then 
-    allocate(son1%bondlist(2,son1%nbondlistentries))
-    allocate(son2%bondlist(2,son2%nbondlistentries))
-    son1%bondlist=pah%bondlist
-    son2%bondlist=pah%bondlist
-  end if
+    son1%nat=medat-1
+    son1%nbondlistentries=pah%nbondlistentries
+    allocate(son1%neighbornumber(son1%nat))
+    allocate(son1%neighborlist(son1%nat,3))
+    son2%nat=pah%nat-medat+1
+    son2%nbondlistentries=pah%nbondlistentries
+    allocate(son2%neighbornumber(son2%nat))
+    allocate(son2%neighborlist(son2%nat,3))
+    if (pah%nbondlistentries > 0) then 
+        allocate(son1%bondlist(2,son1%nbondlistentries))
+        allocate(son2%bondlist(2,son2%nbondlistentries))
+        son1%bondlist=pah%bondlist
+        son2%bondlist=pah%bondlist
+    end if
 
 ! ########################
 ! # update index mapping #
 ! ########################
-  allocate(son1%indexmapping(son1%nat))
-  son1%indexmapping = pah%indexmapping(1:medat-1)
-  allocate(son2%indexmapping(son2%nat))
-  son2%indexmapping = pah%indexmapping(medat:)
+    allocate(son1%indexmapping(son1%nat))
+    son1%indexmapping = pah%indexmapping(1:medat-1)
+    allocate(son2%indexmapping(son2%nat))
+    son2%indexmapping = pah%indexmapping(medat:)
 
 !##########################################
 !# allocate storage for connection output #
 !##########################################
-  allocate(son1%doublebondlist(2,size(pah%doublebondlist,2)))
-  allocate(son1%ringlist(6,size(pah%ringlist,2)))
-  allocate(son2%doublebondlist(2,size(pah%doublebondlist,2)))
-  allocate(son2%ringlist(6,size(pah%ringlist,2)))
+    allocate(son1%doublebondlist(2,size(pah%doublebondlist,2)))
+    allocate(son1%ringlist(6,size(pah%ringlist,2)))
+    allocate(son2%doublebondlist(2,size(pah%doublebondlist,2)))
+    allocate(son2%ringlist(6,size(pah%ringlist,2)))
 
 !##########################################################
 ! # fragments only contain the rest connection infomation #
 !##########################################################
-  son1%doublebondnumber = 0
-  son1%ringnumber = 0
-  son2%doublebondnumber = 0
-  son2%ringnumber = 0
+    son1%doublebondnumber = 0
+    son1%ringnumber = 0
+    son2%doublebondnumber = 0
+    son2%ringnumber = 0
 
 
 !######################
 !# open scratch file for sons
 !######################
-  i = getunit()
-  open(unit=i, status='scratch')
-  son1%storage_unit = i
-  i = getunit()
-  open(unit=i, status='scratch')
-  son2%storage_unit = i
+    i = getunit()
+    open(unit=i, status='scratch')
+    son1%storage_unit = i
+    i = getunit()
+    open(unit=i, status='scratch')
+    son2%storage_unit = i
 
 
 ! #################################
 ! # initialize the son structures #
 ! #################################
-  son1%neighbornumber=pah%neighbornumber(1:medat-1)
-  son1%neighborlist=pah%neighborlist(1:medat-1,1:3)
-  son2%neighbornumber=pah%neighbornumber(medat:pah%nat)
-  son2%neighborlist=pah%neighborlist(medat:pah%nat,1:3)
-  forall (i=1:son2%nat, j=1:3, son2%neighborlist(i,j) /= 0)
-    son2%neighborlist(i,j)=son2%neighborlist(i,j)-son1%nat
-  end forall
-  forall (i=1:son1%nbondlistentries, j=1:2, son1%bondlist(j,i) > son1%nat)
-    son1%bondlist(j,i)=0
-  end forall
-  forall (i=1:son2%nbondlistentries, j=1:2, son2%bondlist(j,i) <= son1%nat)
-    son2%bondlist(j,i)=0
-  end forall
-  forall (i=1:son2%nbondlistentries, j=1:2, son2%bondlist(j,i) /= 0)
-    son2%bondlist(j,i)=son2%bondlist(j,i)-son1%nat
-  end forall
-  call clean_bond_list(son1)
-  call clean_bond_list(son2)
+    son1%neighbornumber=pah%neighbornumber(1:medat-1)
+    son1%neighborlist=pah%neighborlist(1:medat-1,1:3)
+    son2%neighbornumber=pah%neighbornumber(medat:pah%nat)
+    son2%neighborlist=pah%neighborlist(medat:pah%nat,1:3)
+    forall (i=1:son2%nat, j=1:3, son2%neighborlist(i,j) /= 0)
+        son2%neighborlist(i,j)=son2%neighborlist(i,j)-son1%nat
+    end forall
+    forall (i=1:son1%nbondlistentries, j=1:2, son1%bondlist(j,i) > son1%nat)
+        son1%bondlist(j,i)=0
+    end forall
+    forall (i=1:son2%nbondlistentries, j=1:2, son2%bondlist(j,i) <= son1%nat)
+        son2%bondlist(j,i)=0
+    end forall
+    forall (i=1:son2%nbondlistentries, j=1:2, son2%bondlist(j,i) /= 0)
+        son2%bondlist(j,i)=son2%bondlist(j,i)-son1%nat
+    end forall
 
-  son1%hasDisconnectedParent = .true.
-  son2%hasDisconnectedParent = .true.
+    call clean_bond_list(son1)
+    call clean_bond_list(son2)
+
+    son1%hasDisconnectedParent = .true.
+    son2%hasDisconnectedParent = .true.
 
 ! ###################################################
 ! # find the ZZ polynomials for both son structures #
 ! ###################################################
-  call find_ZZ_polynomial(son1,level+1)
-  call find_ZZ_polynomial(son2,level+1)
+    call find_ZZ_polynomial(son1,level+1)
+    call find_ZZ_polynomial(son2,level+1)
 
 ! ######################################################
 ! # multiply the ZZ polynomials of both son structures #
 ! ######################################################
-  call multiply_polynomials(pah,son1,son2)
+    call multiply_polynomials(pah,son1,son2)
 
 !########################################################
 !# combine all connection info from pah, son1, and son2 #
 !########################################################
-  call combine_connection_output(pah,son1,son2)
-  close(son1%storage_unit,status='delete')
-  close(son2%storage_unit,status='delete')
-
+    call combine_connection_output(pah,son1,son2)
+    close(son1%storage_unit,status='delete')
+    close(son2%storage_unit,status='delete')
+    
 
 ! #################################
 ! # deallocate the son structures #
 ! #################################
-  deallocate(son1%neighbornumber)
-  deallocate(son1%neighborlist)
-  deallocate(son1%polynomial)
-  deallocate(son2%neighbornumber)
-  deallocate(son2%neighborlist)
-  deallocate(son2%polynomial)
-  if (son1%nbondlistentries > 0) deallocate(son1%bondlist)
-  if (son2%nbondlistentries > 0) deallocate(son2%bondlist)
+    deallocate(son1%neighbornumber)
+    deallocate(son1%neighborlist)
+    deallocate(son1%polynomial)
+    deallocate(son2%neighbornumber)
+    deallocate(son2%neighborlist)
+    deallocate(son2%polynomial)
+    if (son1%nbondlistentries > 0) deallocate(son1%bondlist)
+    if (son2%nbondlistentries > 0) deallocate(son2%bondlist)
 
-  deallocate(son1%doublebondlist)
-  deallocate(son1%ringlist)
-  deallocate(son2%doublebondlist)
-  deallocate(son2%ringlist)
-  return
+    deallocate(son1%doublebondlist)
+    deallocate(son1%ringlist)
+    deallocate(son2%doublebondlist)
+    deallocate(son2%ringlist)
+    return
 
 end subroutine split_and_decompose
 !####################################################################################
@@ -564,68 +533,71 @@ subroutine select_edge_bond(pah,atom1,atom2)
 ! polycyclic benzenoid structure pah; it uses the fact that the edge
 ! carbon atoms are surounded maximally by 2 hexagons
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  integer(kint) :: i,j,atom1,atom2,atom3,sextet(6)
-  type(structure) :: pah
-  logical :: ring_exists,selected
-  atom2=0
-  selected=.false.
+    implicit none
+    type(structure), intent(in) :: pah
+    integer(kint), intent(out) :: atom1, atom2
+    
+    integer(kint) :: i,j,atom3,sextet(6)
+    logical :: ring_exists,selected
+    
+    atom2 = 0
+    selected = .false.
 
 ! #################################################
 ! # try to select the bond from the provided list #
 ! #################################################
-  outer1: do i=1,pah%nbondlistentries
-    atom1=pah%bondlist(1,i)
-    atom2=pah%bondlist(2,i)
-    if (pah%neighbornumber(atom1) == 2 .or. pah%neighbornumber(atom2) == 2) then
-      selected=.true.
-      exit outer1
-    end if
-    do  j=1,pah%neighbornumber(atom1)
-      if (pah%neighborlist(atom1,j) == atom2) cycle
-      atom3=pah%neighborlist(atom1,j)
-      call find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
-      if (.not. ring_exists) then
-        selected=.true.
-        exit outer1
-      end if
-    end do
-  end do outer1
+    outer1: do i=1,pah%nbondlistentries
+        atom1=pah%bondlist(1,i)
+        atom2=pah%bondlist(2,i)
+        if (pah%neighbornumber(atom1) == 2 .or. pah%neighbornumber(atom2) == 2) then
+            selected=.true.
+            exit outer1
+        end if
+        do  j=1,pah%neighbornumber(atom1)
+            if (pah%neighborlist(atom1,j) == atom2) cycle
+            atom3=pah%neighborlist(atom1,j)
+            call find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
+            if (.not. ring_exists) then
+                selected=.true.
+                exit outer1
+            end if
+        end do
+    end do outer1
 
 ! #############################################################
 ! # otherwise choose an edge bond from the topological matrix #
 ! #############################################################
-  if (.not. selected) then
-    atom2=0
-    outer: do i=1,pah%nat
-      if (pah%neighbornumber(i) == 2) then
-        atom1=i
-        atom2=pah%neighborlist(i,1)
-        exit outer
-      else if (pah%neighbornumber(i) == 3) then
-        atom1=i
-        do j=1,3
-          atom2=pah%neighborlist(atom1,min(j,mod(j,3)+1))
-          atom3=pah%neighborlist(atom1,max(j,mod(j,3)+1))
-          call find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
-          if (.not. ring_exists) then
-            exit outer
-          end if
-        end do
-        atom2=0
-      end if
-    end do outer
-  end if
+    if (.not. selected) then
+        atom2 = 0
+        outer: do i=1,pah%nat
+            if (pah%neighbornumber(i) == 2) then
+                atom1 = i
+                atom2 = pah%neighborlist(i,1)
+                exit outer
+            else if (pah%neighbornumber(i) == 3) then
+                atom1=i
+                do j=1,3
+                    atom2=pah%neighborlist(atom1,min(j,mod(j,3)+1))
+                    atom3=pah%neighborlist(atom1,max(j,mod(j,3)+1))
+                    call find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
+                    if (.not. ring_exists) then
+                        exit outer
+                    end if
+                end do
+                atom2=0
+            end if
+        end do outer
+    end if
 
-  if (atom2 == 0) then
-    write(*,*)"No atom is located on the edge"
-    write(*,*)"despite of non-zero number of atoms:",pah%nat
-    write(*,*)"Logical error - program is terminated in select_edge_bond"
-    stop
-  end if
-  return
+    if (atom2 == 0) then
+        write(*,*)"No atom is located on the edge"
+        write(*,*)"despite of non-zero number of atoms:",pah%nat
+        write(*,*)"Logical error - program is terminated in select_edge_bond"
+        stop
+    end if
+    return
 
 end subroutine select_edge_bond
 !####################################################################################
@@ -641,40 +613,42 @@ subroutine clean_bond_list(pah)
 ! clean the list of bonds by removing not longer
 ! valid entries, i.e. not existing atoms & not existing bonds
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  integer(kint) :: i,j
-  type(structure) :: pah,pah1
-  logical :: are_neighbors
+    implicit none
+    type(structure), intent(inout) :: pah
+    
+    integer(kint) :: i,j
+    type(structure) :: pah1
+    logical :: are_neighbors
 
-  if (pah%nbondlistentries > 0) then
-    allocate(pah1%bondlist(2,pah%nbondlistentries))
-    pah1%bondlist=0
-    j=0
-    do i=1,pah%nbondlistentries
-      if (pah%bondlist(1,i) /= 0) then
-        if (pah%bondlist(2,i) /= 0) then
-          if (are_neighbors(pah,pah%bondlist(1,i),pah%bondlist(2,i))) then
-            j=j+1
-            pah1%bondlist(1,j)=pah%bondlist(1,i)
-            pah1%bondlist(2,j)=pah%bondlist(2,i)
-          end if
+    if (pah%nbondlistentries > 0) then
+        allocate(pah1%bondlist(2,pah%nbondlistentries))
+        pah1%bondlist=0
+        j=0
+        do i=1,pah%nbondlistentries
+            if (pah%bondlist(1,i) /= 0) then
+                if (pah%bondlist(2,i) /= 0) then
+                    if (are_neighbors(pah,pah%bondlist(1,i),pah%bondlist(2,i))) then
+                        j=j+1
+                        pah1%bondlist(1,j)=pah%bondlist(1,i)
+                        pah1%bondlist(2,j)=pah%bondlist(2,i)
+                    end if
+                end if
+            end if
+        end do
+        pah%nbondlistentries=j
+
+        if (pah%nbondlistentries == 0) then
+            deallocate(pah%bondlist)
+        else
+            deallocate(pah%bondlist)
+            allocate(pah%bondlist(2,pah%nbondlistentries))
+            pah%bondlist=pah1%bondlist(:,1:pah%nbondlistentries)
+            deallocate(pah1%bondlist)
         end if
-      end if
-    end do
-    pah%nbondlistentries=j
-
-    if (pah%nbondlistentries == 0) then
-      deallocate(pah%bondlist)
-    else
-      deallocate(pah%bondlist)
-      allocate(pah%bondlist(2,pah%nbondlistentries))
-      pah%bondlist=pah1%bondlist(:,1:pah%nbondlistentries)
-      deallocate(pah1%bondlist)
     end if
-  end if
-  return
+    return
 
 ! #################################################
 ! # try to select the bond from the provided list #
@@ -693,20 +667,22 @@ logical function are_neighbors(pah,atom1,atom2)
 ! return .true. if atoms atom1 and atom2 are neighbors in structure pah;
 ! otherwise, return .false.
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  integer(kint) :: i,atom1,atom2
-  type(structure) :: pah
+    implicit none
+    type(structure), intent(in) :: pah
+    integer(kint), intent(in) :: atom1,atom2
+    
+    integer(kint) :: i
   
-  are_neighbors=.false.
-  do i=1,pah%neighbornumber(atom1)
-    if (pah%neighborlist(atom1,i) == atom2) then
-      are_neighbors=.true.
-      exit
-    end if
-  end do
-  return
+    are_neighbors=.false.
+    do i=1,pah%neighbornumber(atom1)
+        if (pah%neighborlist(atom1,i) == atom2) then
+            are_neighbors=.true.
+            exit
+        end if
+    end do
+    return
 
 end function are_neighbors
 !####################################################################################
