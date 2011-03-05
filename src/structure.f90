@@ -20,23 +20,6 @@ module structure_module
     end type structure
 
 contains 
-    subroutine create(pah, pah1)
-        type(structure), intent(in) :: pah
-        type(structure), intent(inout) :: pah1
-        allocate(pah1%neighbornumber(pah1%nat))
-        allocate(pah1%neighborlist(pah1%nat,3))
-        if (pah1%nbondlistentries > 0) then
-            allocate(pah1%bondlist(2,pah1%nbondlistentries))
-        end if
-        pah1%neighbornumber = 0
-        pah1%neighborlist = 0
-        allocate(pah1%indexmapping(size(pah%indexmapping)))
-        pah1%indexmapping = pah%indexmapping
-        allocate(pah1%doublebondlist(2,size(pah%doublebondlist,2))) 
-        allocate(pah1%ringlist(6,size(pah%ringlist,2))) 
-        pah1%hasDisconnectedParent = pah%hasDisconnectedParent
-        pah1%storage_unit = pah%storage_unit
-    end subroutine
     subroutine destory(pah)
         type(structure), intent(inout) :: pah
         if (allocated(pah%initiallabel)) then

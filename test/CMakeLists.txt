@@ -1,7 +1,6 @@
 file(GLOB TEST_FILES *.in)
 foreach(loop_var IN LISTS TEST_FILES)
     get_filename_component(FNAME ${loop_var} NAME_WE)
-    MESSAGE(${FNAME})
     add_test(NAME ${FNAME}
         COMMAND ${CMAKE_COMMAND}
         -DTEST_PROG=$<TARGET_FILE:aromaticity>

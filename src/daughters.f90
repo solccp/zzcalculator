@@ -21,11 +21,26 @@ subroutine create_nobond_daughter(pah,bond,atom1,atom2)
     bond%nat = pah%nat
     bond%order = 0
     bond%nbondlistentries = pah%nbondlistentries
-    call create(pah, bond)
+    allocate(bond%neighbornumber(bond%nat))
+    allocate(bond%neighborlist(bond%nat,3))
+    if (bond%nbondlistentries > 0) then
+        allocate(bond%bondlist(2,bond%nbondlistentries))
+        bond%bondlist=pah%bondlist
+    end if
+    bond%neighbornumber = 0
+    bond%neighborlist = 0
+ 
+    allocate(bond%indexmapping(bond%nat))
+    bond%indexmapping = pah%indexmapping
+
+    allocate(bond%doublebondlist(2,size(pah%doublebondlist,2))) 
+    allocate(bond%ringlist(6,size(pah%ringlist,2))) 
     bond%doublebondnumber = pah%doublebondnumber
     bond%ringnumber = pah%ringnumber
     bond%doublebondlist = pah%doublebondlist
     bond%ringlist = pah%ringlist
+    bond%hasDisconnectedParent = pah%hasDisconnectedParent
+    bond%storage_unit = pah%storage_unit
 
 ! ###############################
 ! # fill the daughter structure #
@@ -99,11 +114,23 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     pah1%nat = pah%nat-nelim
     pah1%order = 0
     pah1%nbondlistentries = pah%nbondlistentries
-    call create(pah, pah1)
+    allocate(pah1%neighbornumber(pah1%nat))
+    allocate(pah1%neighborlist(pah1%nat,3))
+    if (pah1%nbondlistentries > 0) then
+        allocate(pah1%bondlist(2,pah1%nbondlistentries))
+    end if
+    pah1%neighbornumber = 0
+    pah1%neighborlist = 0
+    allocate(pah1%indexmapping(pah%nat))
+    pah1%indexmapping = pah%indexmapping
+    allocate(pah1%doublebondlist(2,size(pah%doublebondlist,2))) 
+    allocate(pah1%ringlist(6,size(pah%ringlist,2))) 
     pah1%doublebondnumber = pah%doublebondnumber
     pah1%doublebondlist = pah%doublebondlist
     pah1%ringnumber = pah%ringnumber
     pah1%ringlist = pah%ringlist
+    pah1%hasDisconnectedParent = pah%hasDisconnectedParent
+    pah1%storage_unit = pah%storage_unit
 
 ! #############################
 ! # create the transition map #
