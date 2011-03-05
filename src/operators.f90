@@ -82,22 +82,24 @@ subroutine check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
 ! check if a given polycyclic benzenoid structure
 ! has dangling bonds
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  logical :: has_dangling_bonds
-  integer(kint) :: atom1,i
-  type(structure) :: pah
+    implicit none
+    type(structure), intent(in) :: pah
+    logical, intent(out) :: has_dangling_bonds
+    integer(kint), intent(out) :: atom1
 
-  has_dangling_bonds=.false.
-  do i=1,pah%nat
-    if (pah%neighbornumber(i) == 1) then
-      atom1=i
-      has_dangling_bonds=.true.
-      exit
-    end if
-  end do
-  return
+    integer(kint) :: i
+
+    has_dangling_bonds=.false.
+    do i=1, pah%nat
+        if (pah%neighbornumber(i) == 1) then
+            atom1 = i
+            has_dangling_bonds = .true.
+            exit
+        end if
+    end do
+    return
 
 end subroutine check_for_dangling_bonds
 !####################################################################################
@@ -111,48 +113,50 @@ subroutine find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
 ! for a given polycyclic benzenoid structure, the routine
 ! finds an aromatic ring containing atoms: atom1, atom2, and atom3
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  integer(kint) :: i,j,k,l
-  integer(kint) :: atom1,atom2,atom3,atom4,atom5,atom6
-  integer(kint),dimension(6) :: sextet
-  type(structure) :: pah
-  logical :: ring_exists
+    implicit none
+    type(structure), intent(in) :: pah
+    integer(kint), intent(out), dimension(6) :: sextet
+    logical, intent(out) :: ring_exists
+    integer(kint), intent(in) :: atom1,atom2,atom3
+
+    integer(kint) :: i,j,k,l
+    integer(kint) :: atom4,atom5,atom6
 
 ! ##################
 ! # initialization #
 ! ##################
-  ring_exists=.false.
-  sextet(1)=atom1
-  sextet(2)=atom2
-  sextet(3)=atom3
+    ring_exists=.false.
+    sextet(1)=atom1
+    sextet(2)=atom2
+    sextet(3)=atom3
 
 ! ######################################
 ! # look for the remaining three atoms #
 ! ######################################
-  do i=1,pah%neighbornumber(atom3)
-    atom4=pah%neighborlist(atom3,i)
-    if (atom4 /= atom1) then
-      do j=1,pah%neighbornumber(atom2)
-        atom5=pah%neighborlist(atom2,j)
-        if (atom5 /= atom1) then
-          do k=1,pah%neighbornumber(atom4)
-            atom6=pah%neighborlist(atom4,k)
-            do l=1,pah%neighbornumber(atom5)
-              if (atom6 == pah%neighborlist(atom5,l)) then
-                sextet(4)=atom4
-                sextet(5)=atom5
-                sextet(6)=atom6
-                ring_exists=.true.
-              end if
+    do i=1,pah%neighbornumber(atom3)
+        atom4=pah%neighborlist(atom3,i)
+        if (atom4 /= atom1) then
+            do j=1,pah%neighbornumber(atom2)
+                atom5=pah%neighborlist(atom2,j)
+                if (atom5 /= atom1) then
+                    do k=1,pah%neighbornumber(atom4)
+                        atom6=pah%neighborlist(atom4,k)
+                        do l=1,pah%neighbornumber(atom5)
+                            if (atom6 == pah%neighborlist(atom5,l)) then
+                                sextet(4) = atom4
+                                sextet(5) = atom5
+                                sextet(6) = atom6
+                                ring_exists = .true.
+                            end if
+                        end do
+                    end do
+                end if
             end do
-          end do
         end if
-      end do
-    end if
-  end do
-  return
+    end do
+    return
 
 end subroutine find_aromatic_sextet
 !####################################################################################
@@ -168,56 +172,58 @@ subroutine find_edge_ring(pah,sextet,atom1,atom2,ring_exists)
 ! for a given polycyclic benzenoid structure, the routine
 ! finds an aromatic ring containing atoms: atom1 and atom2
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  integer(kint) :: i,j,k,l,m
-  integer(kint) :: atom1,atom2,atom3,atom4,atom5,atom6
-  integer(kint),dimension(6) :: sextet
-  type(structure) :: pah
-  logical :: ring_exists
+    implicit none
+    type(structure), intent(in) :: pah
+    integer(kint), intent(out), dimension(6) :: sextet
+    integer(kint), intent(in) :: atom1,atom2
+    logical, intent(out) :: ring_exists
+    
+    integer(kint) :: i,j,k,l,m
+    integer(kint) :: atom3,atom4,atom5,atom6
 
 ! ##################
 ! # initialization #
 ! ##################
-  ring_exists=.false.
-  sextet(1)=atom1
-  sextet(2)=atom2
+    ring_exists = .false.
+    sextet(1) = atom1
+    sextet(2) = atom2
 
 ! #####################################
 ! # look for the remaining four atoms #
 ! #####################################
-  outer: do i=1,pah%neighbornumber(atom1)
-    atom3=pah%neighborlist(atom1,i)
-    if (atom3 /= atom2) then
-      do j=1,pah%neighbornumber(atom2)
-        atom4=pah%neighborlist(atom2,j)
-        if (atom4 /= atom1) then
-          do k=1,pah%neighbornumber(atom3)
-            atom5=pah%neighborlist(atom3,k)
-            if (atom5 /= atom1) then
-              do l=1,pah%neighbornumber(atom4)
-                atom6=pah%neighborlist(atom4,l)
-                if (atom6 /= atom2) then
-                  do m=1,pah%neighbornumber(atom5)
-                    if (atom6 == pah%neighborlist(atom5,m)) then
-                      sextet(3)=atom3
-                      sextet(4)=atom4
-                      sextet(5)=atom5
-                      sextet(6)=atom6
-                      ring_exists=.true.
-                      exit outer
-                    end if
-                  end do
+    outer: do i=1,pah%neighbornumber(atom1)
+        atom3=pah%neighborlist(atom1,i)
+        if (atom3 /= atom2) then
+            do j=1,pah%neighbornumber(atom2)
+                atom4=pah%neighborlist(atom2,j)
+                if (atom4 /= atom1) then
+                    do k=1,pah%neighbornumber(atom3)
+                        atom5=pah%neighborlist(atom3,k)
+                        if (atom5 /= atom1) then
+                            do l=1,pah%neighbornumber(atom4)
+                                atom6=pah%neighborlist(atom4,l)
+                                if (atom6 /= atom2) then
+                                    do m=1,pah%neighbornumber(atom5)
+                                        if (atom6 == pah%neighborlist(atom5,m)) then
+                                            sextet(3)=atom3
+                                            sextet(4)=atom4
+                                            sextet(5)=atom5
+                                            sextet(6)=atom6
+                                            ring_exists=.true.
+                                            exit outer
+                                        end if
+                                    end do
+                                end if
+                            end do
+                        end if
+                    end do
                 end if
-              end do
-            end if
-          end do
+            end do
         end if
-      end do
-    end if
-  end do outer
-  return
+    end do outer
+    return
 
 end subroutine find_edge_ring
 !####################################################################################
@@ -237,82 +243,85 @@ subroutine check_if_connected(pah,medat)
 !   in first (medat-1) positions of pah, and the remaining substructure (possibly
 !   disconnected) in the remaining positions
 !
-  use types_module
+    use types_module
     use structure_module
-  implicit none
-  type(structure) :: pah,pah1
-  integer(kint) :: i,j,k,medat,lnat,start
-  integer(kint), dimension(:), allocatable :: map
-  logical, dimension(:), allocatable :: visit_list
+    implicit none
+    type(structure), intent(inout) :: pah
+    integer(kint), intent(out) :: medat
 
-  allocate(map(pah%nat))
-  allocate(visit_list(pah%nat))
+    type(structure) :: pah1
+    integer(kint) :: i,j,k,lnat,start
+    integer(kint), dimension(:), allocatable :: map
+    logical, dimension(:), allocatable :: visit_list
+
+    allocate(map(pah%nat))
+    allocate(visit_list(pah%nat))
 
 ! #########################################################
 ! # find the connected cluster of atoms containing atom 1 #
 ! #########################################################
-  lnat=0
-  start = 1
-  visit_list(1:pah%nat)=.false.
-  call dfs(pah,pah%nat,visit_list,lnat)
+    lnat=0
+    start = 1
+    visit_list(1:pah%nat)=.false.
+    call dfs(pah,pah%nat,visit_list,lnat)
 
 ! ##########################################
 ! # return if all atoms are in the cluster #
 ! ##########################################
-  if (lnat == pah%nat) then
-    medat = 0
-    return
-  else
-    medat=lnat+1
-  end if
+    if (lnat == pah%nat) then
+        medat = 0
+        return
+    else
+        medat = lnat+1
+    end if
 
 ! ##################################################
 ! # find the mapping for the reorderred structure  #
 ! ##################################################
-  i=0
-  j=lnat
-  do k=1,pah%nat
-    if (visit_list(k)) then
-      i=i+1
-      map(k)=i
-    else
-      j=j+1
-      map(k)=j
-    end if
-  end do
+    i = 0
+    j = lnat
+    do k=1,pah%nat
+        if (visit_list(k)) then
+            i=i+1
+            map(k)=i
+        else
+            j=j+1
+            map(k)=j
+        end if
+    end do
 
 ! ################################################
 ! # translate the structure into the new mapping #
 ! ################################################
-  allocate(pah1%neighbornumber(pah%nat))
-  allocate(pah1%neighborlist(pah%nat,3))
-  allocate(pah1%indexmapping(pah%nat))
-  pah1%neighbornumber=0
-  pah1%neighborlist=0
-  do k=1,pah%nat
-    pah1%neighbornumber(map(k))=pah%neighbornumber(k)
-    do i=1,pah%neighbornumber(k)
-      pah1%neighborlist(map(k),i)=map(pah%neighborlist(k,i))
+    allocate(pah1%neighbornumber(pah%nat))
+    allocate(pah1%neighborlist(pah%nat,3))
+    allocate(pah1%indexmapping(pah%nat))
+    pah1%neighbornumber=0
+    pah1%neighborlist=0
+    do k=1,pah%nat
+        pah1%neighbornumber(map(k))=pah%neighbornumber(k)
+        do i=1,pah%neighbornumber(k)
+            pah1%neighborlist(map(k),i)=map(pah%neighborlist(k,i))
+        end do
+        pah1%indexmapping(map(k)) = pah%indexmapping(k)
     end do
-    pah1%indexmapping(map(k)) = pah%indexmapping(k)
-  end do
-  pah%neighbornumber=pah1%neighbornumber
-  pah%neighborlist=pah1%neighborlist
-  pah%indexmapping(1:pah%nat) = pah1%indexmapping
+    pah%neighbornumber=pah1%neighbornumber
+    pah%neighborlist=pah1%neighborlist
+    pah%indexmapping(1:pah%nat) = pah1%indexmapping
   
 
 ! ######################################
 ! # map the bond list to the new order #
 ! ######################################
-  if (pah%nbondlistentries > 0) then
-    forall (i=1:pah%nbondlistentries, j=1:2, pah%bondlist(j,i) /= 0)
-      pah%bondlist(j,i)=map(pah%bondlist(j,i))
-    end forall
-  end if
+    if (pah%nbondlistentries > 0) then
+        forall (i=1:pah%nbondlistentries, j=1:2, pah%bondlist(j,i) /= 0)
+            pah%bondlist(j,i)=map(pah%bondlist(j,i))
+        end forall
+    end if
 
-  deallocate(map)
-  deallocate(visit_list)
-  return
+    deallocate(map)
+    deallocate(visit_list)
+    return
 
 end subroutine check_if_connected
 !####################################################################################
