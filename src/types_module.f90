@@ -5,9 +5,9 @@ module types_module
     integer, parameter :: kint = 8
     integer, parameter :: kreal = kind(0.0d0)
 
-    type,public :: vlonginteger
-        integer,public :: leadpow
-        integer(kint), private :: tabl(40)
+    type, public :: vlonginteger
+        integer :: leadpow
+        integer(kint) :: tabl(40)
     end type vlonginteger
 
 
@@ -22,8 +22,8 @@ function setvli(a) result(c)
     c%tabl=0
     b=a
     do i=1,40
-        c%tabl(i)=mod(b,10000)
-        b=(b-c%tabl(i))/10000
+        c%tabl(i)=mod(b,10000_kint)
+        b=(b-c%tabl(i))/10000_kint
         if (b == 0) then
             c%leadpow=i
             exit
@@ -45,14 +45,14 @@ function addvli(a,b) result(c)
         c%tabl(i)=c%tabl(i)+a%tabl(i)+b%tabl(i)
     end do
     do i=1,min(39,c%leadpow)
-        if (c%tabl(i) >= 10000) then
-            val=mod(c%tabl(i),10000)
-            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i)-val)/10000
+        if (c%tabl(i) >= 10000_kint) then
+            val=mod(c%tabl(i),10000_kint)
+            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i)-val)/10000_kint
             c%tabl(i)=val
         end if
     end do
 
-    if (c%tabl(40) >= 10000) then
+    if (c%tabl(40) >= 10000_kint) then
         print*,"overflow in addvli, enlarge size of tabl"
         stop
     end if
@@ -76,9 +76,9 @@ function multvli(a,b) result(c)
         end do
     end do
     do i=1,min(39,a%leadpow+b%leadpow)
-        if (c%tabl(i) >= 10000) then
-            val=mod(c%tabl(i),10000)
-            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i)-val)/10000
+        if (c%tabl(i) >= 10000_kint) then
+            val=mod(c%tabl(i),10000_kint)
+            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i)-val)/10000_kint
             c%tabl(i)=val
         end if
     end do

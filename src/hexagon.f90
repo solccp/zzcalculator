@@ -48,9 +48,9 @@ subroutine find_all_hexagons(nat,pah,nhex,lista)
 !     # loop over all 2-combinations of three neighbors #
 !     ###################################################
             innerloop: do j=1,3
-                atom2=pah%neighborlist(i,mod(j,3)+1)
+                atom2=pah%neighborlist(i,mod(j,3_kint)+1)
                 if (atom2 < i) cycle innerloop
-                atom3=pah%neighborlist(i,mod(j+1,3)+1)
+                atom3=pah%neighborlist(i,mod(j+1,3_kint)+1)
                 if (atom3 < i) cycle innerloop
                 call find_aromatic_sextet(pah,sextet,i,atom2,atom3,ring_exists)
                 if (ring_exists) then

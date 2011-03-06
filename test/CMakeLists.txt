@@ -7,5 +7,7 @@ foreach(loop_var IN LISTS TEST_FILES)
         -DTEST_NAME=${FNAME}
         -DSOURCEDIR=${CMAKE_HOME_DIRECTORY}/test
         -P ${CMAKE_HOME_DIRECTORY}/cmake/script/runtest.cmake)
+    add_custom_target(${FNAME} DEPENDS aromaticity)
+#    add_dependencies(${FNAME}, aromaticity)
 endforeach()
 

@@ -29,7 +29,7 @@ subroutine find_ZZ_polynomial(pah,level)
 ! ##########################################
 ! # if pah contains an odd number of atoms #
 ! ##########################################
-    else if (mod(pah%nat,2) == 1) then
+    else if (mod(pah%nat,2_kint) == 1) then
         pah%order = 0
         allocate(pah%polynomial(pah%order+1))
         pah%polynomial(1)=setvli(0_kint)
