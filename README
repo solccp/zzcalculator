@@ -1,0 +1,9 @@
+
+
+Tested CMake versions:
+  - v2.8.2
+
+Tested Compiler Versions and Platforms
+  - Intel Fortran Compiler 12.0 on Ubuntu 10.10 x86_64
+  - G95 0.93 on Ubuntu 10.10 x86_64
+
