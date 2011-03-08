@@ -1,30 +1,69 @@
 module output
 
+    character(len=300), save :: output_filename = 'intermediate_strs.yaml'
+
+    integer, save :: output_unit = -1
+
 contains
+    subroutine close_file()
+        close(output_unit) 
+    end subroutine
+    subroutine open_file()
+        output_unit = getunit()
+        open(file=trim(output_filename), unit=output_unit) 
+    end subroutine
     subroutine write_connections(pah)
         use types_module
         use structure_module
         type(structure), intent(in) :: pah
+        logical, parameter :: flow = .true.
         integer(kint) :: i
         integer(kint), save :: output_index = 0
-   
-        return     
+
+
+        if (output_index > 100) then
+            return
+        endif 
+
+        if (output_unit < 0) then
+            call open_file()
+        end if
+        
+
         output_index = output_index +1
-        write(*,*) 'writing structure ', output_index
-        write(*,*) 'number of atoms: ', pah%doublebondnumber*2+pah%ringnumber*6
+        write(output_unit,'(a)') '---'
+        write(output_unit,'(a,I0)') 'structure_id: ', output_index
+        write(output_unit,'(a,I0)') 'number_of_atoms: ', pah%doublebondnumber*2+pah%ringnumber*6
         if (pah%doublebondnumber > 0) then
-            write(*,*) 'double bond:'
-            do i=1, pah%doublebondnumber
-                write(*,*) pah%doublebondlist(:,i)
-            end do
+            write(output_unit,'(a)') 'double_bonds:'
+            if (flow) then
+                do i=1, pah%doublebondnumber
+                    write(output_unit, '(a, 2(I0, a))') '- [', pah%doublebondlist(1,i), ', ', pah%doublebondlist(2,i), ']'
+                end do
+            else
+                do i=1, pah%doublebondnumber
+                    write(output_unit, '(a, I0)') '- - ', pah%doublebondlist(1,i)
+                    write(output_unit, '(a, I0)') '  - ', pah%doublebondlist(2,i)
+                end do
+            end if
         end if
         if (pah%ringnumber > 0) then
-            write(*,*) 'ring:'
-            do i=1, pah%ringnumber
-                write(*,'(999(I5,X))') pah%ringlist(:,i)
-            end do
+            write(output_unit,'(a)') 'rings:'
+            if (flow) then
+                do i=1, pah%ringnumber
+                    write(output_unit, '(a, 6(I0, a))') '- [', (pah%ringlist(j,i), ', ', j=1,5), pah%ringlist(6,i), ']'
+                end do
+            else
+                do i=1, pah%ringnumber
+                    write(output_unit,'(a, I0)') '- - ', pah%ringlist(1,i)
+                    write(output_unit,'(a, I0)') '  - ', pah%ringlist(2,i)
+                    write(output_unit,'(a, I0)') '  - ', pah%ringlist(3,i)
+                    write(output_unit,'(a, I0)') '  - ', pah%ringlist(4,i)
+                    write(output_unit,'(a, I0)') '  - ', pah%ringlist(5,i)
+                    write(output_unit,'(a, I0)') '  - ', pah%ringlist(6,i)
+                end do
+            end if
         end if
-        write(*,*) "===================================================="
     end subroutine
     function getunit() 
         integer :: getunit 
@@ -50,12 +89,12 @@ contains
             stop
         end if
 
-        write(pah%storage_unit, '(2(I6,X))') pah%doublebondnumber, pah%ringnumber
+        write(pah%storage_unit, '(2(I6,1X))') pah%doublebondnumber, pah%ringnumber
         do i=1, pah%doublebondnumber
-            write(pah%storage_unit, '(2(I6,X))') pah%doublebondlist(:,i)
+            write(pah%storage_unit, '(2(I6,1X))') pah%doublebondlist(:,i)
         end do
         do i=1, pah%ringnumber
-            write(pah%storage_unit, '(6(I6,X))') pah%ringlist(:,i)
+            write(pah%storage_unit, '(6(I6,1X))') pah%ringlist(:,i)
         end do
     end subroutine
 
@@ -70,7 +109,7 @@ contains
         integer :: errorcode
 
         allocate(temp%doublebondlist(2,size(pah%doublebondlist,2)))
-        allocate(temp%ringlist(2,size(pah%ringlist,2)))
+        allocate(temp%ringlist(6,size(pah%ringlist,2)))
         temp%storage_unit = pah%storage_unit
         temp%doublebondlist = pah%doublebondlist
         temp%ringlist = pah%ringlist
