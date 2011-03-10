@@ -34,7 +34,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('P')
+        okey = getopt('Pl:')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -43,6 +43,12 @@ program zhang_polynomial
         
         if(okey == 'P') then
             options%print_intermediate_structures = .true.
+        end if
+        if(okey == 'l') then
+            read(optarg, '(i)') options%print_order
+            if (options%print_order < 0) then 
+                options%print_order = 0
+            end if
         end if
         if(okey == '.') then
             input_fname = optarg
