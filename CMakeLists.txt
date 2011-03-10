@@ -8,6 +8,8 @@ endif (NOT CMAKE_BUILD_TYPE)
 # States that CMake required version must be >= 2.6
 cmake_minimum_required(VERSION 2.6)
 
+option(PROFILING "set profiling flags" OFF)
+
 # Appends the cmake/modules path inside the MAKE_MODULE_PATH variable which stores the
 # directories of additional CMake modules (eg MacroOutOfSourceBuild.cmake):
 set(CMAKE_MODULE_PATH ${ZZ_polynomial_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})

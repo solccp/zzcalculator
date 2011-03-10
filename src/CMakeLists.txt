@@ -8,6 +8,11 @@ file(GLOB ZZ_polynomial_SOURCES *.f90)
 # Create an executable file called helloworld from sources:
 add_executable(ZZ_polynomial ${ZZ_polynomial_SOURCES})
 
+if (PROFILING)
+    message("test")
+    set (CMAKE_Fortran_FLAGS "-pg")
+endif()
+
 #set_target_properties(ZZ_polynomial PROPERTIES LINKER_LANGUAGE Fortran)
 # test whether this is an intel compiler, then use -static-intel when linking
 if( CMAKE_Fortran_COMPILER_ID STREQUAL Intel )

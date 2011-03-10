@@ -205,10 +205,10 @@ subroutine find_edge_ring(pah,sextet,atom1,atom2,ring_exists)
                                 if (atom6 /= atom2) then
                                     do m=1,pah%neighbornumber(atom5)
                                         if (atom6 == pah%neighborlist(atom5,m)) then
-                                            sextet(3)=atom3
-                                            sextet(4)=atom4
+                                            sextet(3)=atom4
+                                            sextet(4)=atom6
                                             sextet(5)=atom5
-                                            sextet(6)=atom6
+                                            sextet(6)=atom3
                                             ring_exists=.true.
                                             exit outer
                                         end if

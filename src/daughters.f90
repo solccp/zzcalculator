@@ -146,9 +146,9 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 !###########################################
 !# add deleted atom to the happy atom list #
 !###########################################
-    if (nelim == 6 .and. ring_exist) then
+    if (ring_exist) then ! .and. nelim == 6) then
         pah1%ringnumber = pah1%ringnumber+1
-        pah1%ringlist(1:6,pah1%ringnumber) = pah1%indexmapping(delatoms(1:6))
+        pah1%ringlist(:,pah1%ringnumber) = pah1%indexmapping(delatoms(1:6))
     else
         j = nelim
         k = 1
