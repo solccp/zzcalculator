@@ -7,6 +7,7 @@ subroutine create_nobond_daughter(pah,bond,atom1,atom2)
 ! 
     use types_module
     use structure_module
+    use options_m
 
     implicit none
     type(structure), intent(in) :: pah
@@ -30,17 +31,20 @@ subroutine create_nobond_daughter(pah,bond,atom1,atom2)
     bond%neighbornumber = 0
     bond%neighborlist = 0
  
-    allocate(bond%indexmapping(bond%nat))
-    bond%indexmapping = pah%indexmapping
 
-    allocate(bond%doublebondlist(2,size(pah%doublebondlist,2))) 
-    allocate(bond%ringlist(6,size(pah%ringlist,2))) 
-    bond%doublebondnumber = pah%doublebondnumber
-    bond%ringnumber = pah%ringnumber
-    bond%doublebondlist = pah%doublebondlist
-    bond%ringlist = pah%ringlist
-    bond%hasDisconnectedParent = pah%hasDisconnectedParent
-    bond%storage_unit = pah%storage_unit
+    if (options%print_intermediate_structures) then
+        allocate(bond%indexmapping(bond%nat))
+        bond%indexmapping = pah%indexmapping
+
+        allocate(bond%doublebondlist(2,size(pah%doublebondlist,2))) 
+        allocate(bond%ringlist(6,size(pah%ringlist,2))) 
+        bond%doublebondnumber = pah%doublebondnumber
+        bond%ringnumber = pah%ringnumber
+        bond%doublebondlist = pah%doublebondlist
+        bond%ringlist = pah%ringlist
+        bond%hasDisconnectedParent = pah%hasDisconnectedParent
+        bond%storage_unit = pah%storage_unit
+    end if
 
 ! ###############################
 ! # fill the daughter structure #
@@ -84,6 +88,7 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 ! 
     use types_module
     use structure_module
+    use options_m
     implicit none
     type(structure), intent(in) :: pah
     type(structure), intent(inout) :: pah1
@@ -121,16 +126,39 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     end if
     pah1%neighbornumber = 0
     pah1%neighborlist = 0
-    allocate(pah1%indexmapping(pah%nat))
-    pah1%indexmapping = pah%indexmapping
-    allocate(pah1%doublebondlist(2,size(pah%doublebondlist,2))) 
-    allocate(pah1%ringlist(6,size(pah%ringlist,2))) 
-    pah1%doublebondnumber = pah%doublebondnumber
-    pah1%doublebondlist = pah%doublebondlist
-    pah1%ringnumber = pah%ringnumber
-    pah1%ringlist = pah%ringlist
-    pah1%hasDisconnectedParent = pah%hasDisconnectedParent
-    pah1%storage_unit = pah%storage_unit
+
+
+    if (options%print_intermediate_structures) then
+        allocate(pah1%indexmapping(pah%nat))
+        pah1%indexmapping = pah%indexmapping
+        allocate(pah1%doublebondlist(2,size(pah%doublebondlist,2))) 
+        allocate(pah1%ringlist(6,size(pah%ringlist,2))) 
+        pah1%doublebondnumber = pah%doublebondnumber
+        pah1%doublebondlist = pah%doublebondlist
+        pah1%ringnumber = pah%ringnumber
+        pah1%ringlist = pah%ringlist
+        pah1%hasDisconnectedParent = pah%hasDisconnectedParent
+        pah1%storage_unit = pah%storage_unit
+    !###########################################
+    !# add deleted atom to the happy atom list #
+    !###########################################
+        if (ring_exist) then 
+            pah1%ringnumber = pah1%ringnumber+1
+            pah1%ringlist(:,pah1%ringnumber) = pah1%indexmapping(delatoms(1:6))
+        else
+            j = nelim
+            k = 1
+            do while(j>0)
+                pah1%doublebondnumber = pah1%doublebondnumber+1
+                do i=1, 2
+                    pah1%doublebondlist(i,pah1%doublebondnumber) = pah1%indexmapping(delatoms(k))
+                    k = k + 1
+                end do
+                j = j - 2
+            end do
+        end if
+
+    end if
 
 ! #############################
 ! # create the transition map #
@@ -142,25 +170,6 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
             map(i)=j
         end if
     end do
-
-!###########################################
-!# add deleted atom to the happy atom list #
-!###########################################
-    if (ring_exist) then ! .and. nelim == 6) then
-        pah1%ringnumber = pah1%ringnumber+1
-        pah1%ringlist(:,pah1%ringnumber) = pah1%indexmapping(delatoms(1:6))
-    else
-        j = nelim
-        k = 1
-        do while(j>0)
-            pah1%doublebondnumber = pah1%doublebondnumber+1
-            do i=1, 2
-                pah1%doublebondlist(i,pah1%doublebondnumber) = pah1%indexmapping(delatoms(k))
-                k = k + 1
-            end do
-            j = j - 2
-        end do
-    end if
 
 ! ###########################################
 ! # create the structure with deleted atoms #
@@ -176,9 +185,16 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
                 end if
             end do
             pah1%neighbornumber(map(i)) = k
-            pah1%indexmapping(map(i)) = pah%indexmapping(i)
         end if
     end do
+    if (options%print_intermediate_structures) then
+        do i=1,pah%nat
+            if (map(i) /= 0) then 
+                pah1%indexmapping(map(i)) = pah%indexmapping(i)
+            end if
+        end do
+    end if
+        
 
 ! #######################################
 ! # translate to the new atom numbering #

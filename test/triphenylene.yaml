@@ -1,0 +1,340 @@
+---
+structure_id: 1
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [7, 11]
+- [12, 13]
+- [14, 8]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+---
+structure_id: 2
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [7, 11]
+- [12, 13]
+- [14, 8]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+---
+structure_id: 3
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [7, 11]
+- [12, 13]
+- [14, 8]
+rings:
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 4
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [7, 8]
+- [11, 12]
+- [13, 14]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+---
+structure_id: 5
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [7, 8]
+- [11, 12]
+- [13, 14]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+---
+structure_id: 6
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [7, 8]
+- [11, 12]
+- [13, 14]
+rings:
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 7
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+rings:
+- [7, 8, 14, 13, 12, 11]
+---
+structure_id: 8
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+rings:
+- [7, 8, 14, 13, 12, 11]
+---
+structure_id: 9
+number_of_atoms: 18
+double_bonds:
+- [1, 6]
+- [2, 3]
+- [5, 4]
+rings:
+- [7, 8, 14, 13, 12, 11]
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 10
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 10]
+- [4, 7]
+- [11, 12]
+- [13, 14]
+- [8, 9]
+- [15, 17]
+- [16, 18]
+---
+structure_id: 11
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [7, 11]
+- [12, 13]
+- [14, 8]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+---
+structure_id: 12
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [7, 11]
+- [12, 13]
+- [14, 8]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+---
+structure_id: 13
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [7, 11]
+- [12, 13]
+- [14, 8]
+rings:
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 14
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [7, 8]
+- [11, 12]
+- [13, 14]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+---
+structure_id: 15
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [7, 8]
+- [11, 12]
+- [13, 14]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+---
+structure_id: 16
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [7, 8]
+- [11, 12]
+- [13, 14]
+rings:
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 17
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+rings:
+- [7, 8, 14, 13, 12, 11]
+---
+structure_id: 18
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+rings:
+- [7, 8, 14, 13, 12, 11]
+---
+structure_id: 19
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [3, 4]
+rings:
+- [7, 8, 14, 13, 12, 11]
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 20
+number_of_atoms: 18
+double_bonds:
+- [1, 2]
+- [6, 5]
+- [11, 12]
+- [13, 14]
+- [15, 17]
+- [16, 18]
+rings:
+- [3, 4, 7, 8, 9, 10]
+---
+structure_id: 21
+number_of_atoms: 18
+double_bonds:
+- [7, 11]
+- [12, 13]
+- [14, 8]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+rings:
+- [1, 2, 3, 4, 5, 6]
+---
+structure_id: 22
+number_of_atoms: 18
+double_bonds:
+- [7, 11]
+- [12, 13]
+- [14, 8]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+rings:
+- [1, 2, 3, 4, 5, 6]
+---
+structure_id: 23
+number_of_atoms: 18
+double_bonds:
+- [7, 11]
+- [12, 13]
+- [14, 8]
+rings:
+- [1, 2, 3, 4, 5, 6]
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 24
+number_of_atoms: 18
+double_bonds:
+- [7, 8]
+- [11, 12]
+- [13, 14]
+- [9, 16]
+- [10, 15]
+- [17, 18]
+rings:
+- [1, 2, 3, 4, 5, 6]
+---
+structure_id: 25
+number_of_atoms: 18
+double_bonds:
+- [7, 8]
+- [11, 12]
+- [13, 14]
+- [9, 10]
+- [15, 17]
+- [16, 18]
+rings:
+- [1, 2, 3, 4, 5, 6]
+---
+structure_id: 26
+number_of_atoms: 18
+double_bonds:
+- [7, 8]
+- [11, 12]
+- [13, 14]
+rings:
+- [1, 2, 3, 4, 5, 6]
+- [9, 10, 15, 17, 18, 16]
+---
+structure_id: 27
+number_of_atoms: 18
+double_bonds:
+- [9, 16]
+- [10, 15]
+- [17, 18]
+rings:
+- [1, 2, 3, 4, 5, 6]
+- [7, 8, 14, 13, 12, 11]
+---
+structure_id: 28
+number_of_atoms: 18
+double_bonds:
+- [9, 10]
+- [15, 17]
+- [16, 18]
+rings:
+- [1, 2, 3, 4, 5, 6]
+- [7, 8, 14, 13, 12, 11]
+---
+structure_id: 29
+number_of_atoms: 18
+rings:
+- [1, 2, 3, 4, 5, 6]
+- [7, 8, 14, 13, 12, 11]
+- [9, 10, 15, 17, 18, 16]

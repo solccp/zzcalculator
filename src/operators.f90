@@ -243,6 +243,7 @@ subroutine check_if_connected(pah,medat)
 !
     use types_module
     use structure_module
+    use options_m
     implicit none
     type(structure), intent(inout) :: pah
     integer(kint), intent(out) :: medat
@@ -288,12 +289,21 @@ subroutine check_if_connected(pah,medat)
         end if
     end do
 
+
+
+    if (options%print_intermediate_structures) then
+        allocate(pah1%indexmapping(pah%nat))
+        do k=1,pah%nat
+            pah1%indexmapping(map(k)) = pah%indexmapping(k)
+        end do
+        pah%indexmapping(1:pah%nat) = pah1%indexmapping
+    end if
+
 ! ################################################
 ! # translate the structure into the new mapping #
 ! ################################################
     allocate(pah1%neighbornumber(pah%nat))
     allocate(pah1%neighborlist(pah%nat,3))
-    allocate(pah1%indexmapping(pah%nat))
     pah1%neighbornumber=0
     pah1%neighborlist=0
     do k=1,pah%nat
@@ -301,11 +311,9 @@ subroutine check_if_connected(pah,medat)
         do i=1,pah%neighbornumber(k)
             pah1%neighborlist(map(k),i)=map(pah%neighborlist(k,i))
         end do
-        pah1%indexmapping(map(k)) = pah%indexmapping(k)
     end do
     pah%neighbornumber=pah1%neighbornumber
     pah%neighborlist=pah1%neighborlist
-    pah%indexmapping(1:pah%nat) = pah1%indexmapping
   
 
 ! ######################################
@@ -383,6 +391,7 @@ subroutine split_and_decompose(pah,medat,level)
     use types_module
     use output
     use structure_module
+    use options_m
     implicit none
     
     type(structure), intent(in) :: pah
@@ -409,41 +418,45 @@ subroutine split_and_decompose(pah,medat,level)
         son2%bondlist=pah%bondlist
     end if
 
-! ########################
-! # update index mapping #
-! ########################
-    allocate(son1%indexmapping(son1%nat))
-    son1%indexmapping = pah%indexmapping(1:medat-1)
-    allocate(son2%indexmapping(son2%nat))
-    son2%indexmapping = pah%indexmapping(medat:)
+    if (options%print_intermediate_structures) then
+    ! ########################
+    ! # update index mapping #
+    ! ########################
+        allocate(son1%indexmapping(son1%nat))
+        son1%indexmapping = pah%indexmapping(1:medat-1)
+        allocate(son2%indexmapping(son2%nat))
+        son2%indexmapping = pah%indexmapping(medat:)
 
-!##########################################
-!# allocate storage for connection output #
-!##########################################
-    allocate(son1%doublebondlist(2,size(pah%doublebondlist,2)))
-    allocate(son1%ringlist(6,size(pah%ringlist,2)))
-    allocate(son2%doublebondlist(2,size(pah%doublebondlist,2)))
-    allocate(son2%ringlist(6,size(pah%ringlist,2)))
+    !##########################################
+    !# allocate storage for connection output #
+    !##########################################
+        allocate(son1%doublebondlist(2,size(pah%doublebondlist,2)))
+        allocate(son1%ringlist(6,size(pah%ringlist,2)))
+        allocate(son2%doublebondlist(2,size(pah%doublebondlist,2)))
+        allocate(son2%ringlist(6,size(pah%ringlist,2)))
 
-!##########################################################
-! # fragments only contain the rest connection infomation #
-!##########################################################
-    son1%doublebondnumber = 0
-    son1%ringnumber = 0
-    son2%doublebondnumber = 0
-    son2%ringnumber = 0
+    !##########################################################
+    ! # fragments only contain the rest connection infomation #
+    !##########################################################
+        son1%doublebondnumber = 0
+        son1%ringnumber = 0
+        son2%doublebondnumber = 0
+        son2%ringnumber = 0
 
 
-!######################
-!# open scratch file for sons
-!######################
-    i = getunit()
-    open(unit=i, status='scratch')
-    son1%storage_unit = i
-    i = getunit()
-    open(unit=i, status='scratch')
-    son2%storage_unit = i
-
+    !######################
+    !# open scratch file for sons
+    !######################
+        i = getunit()
+        open(unit=i, status='scratch')
+        son1%storage_unit = i
+        i = getunit()
+        open(unit=i, status='scratch')
+        son2%storage_unit = i
+    
+        son1%hasDisconnectedParent = .true.
+        son2%hasDisconnectedParent = .true.
+    end if
 
 ! #################################
 ! # initialize the son structures #
@@ -468,8 +481,6 @@ subroutine split_and_decompose(pah,medat,level)
     call clean_bond_list(son1)
     call clean_bond_list(son2)
 
-    son1%hasDisconnectedParent = .true.
-    son2%hasDisconnectedParent = .true.
 
 ! ###################################################
 ! # find the ZZ polynomials for both son structures #
@@ -482,12 +493,16 @@ subroutine split_and_decompose(pah,medat,level)
 ! ######################################################
     call multiply_polynomials(pah,son1,son2)
 
-!########################################################
-!# combine all connection info from pah, son1, and son2 #
-!########################################################
-    call combine_connection_output(pah,son1,son2)
-    close(son1%storage_unit,status='delete')
-    close(son2%storage_unit,status='delete')
+    if (options%print_intermediate_structures) then
+    !########################################################
+    !# combine all connection info from pah, son1, and son2 #
+    !########################################################
+        call combine_connection_output(pah,son1,son2)
+
+
+        close(son1%storage_unit,status='delete')
+        close(son2%storage_unit,status='delete')
+    end if
     
 
 ! #################################

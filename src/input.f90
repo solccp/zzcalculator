@@ -7,6 +7,7 @@ subroutine read_input(input_fname,pah)
 !
     use types_module
     use structure_module
+    use options_m
     implicit none
     character(len=*), intent(in) :: input_fname
     type(structure), intent(inout) :: pah
@@ -28,8 +29,7 @@ subroutine read_input(input_fname,pah)
     ! ######################
     ! # read geometry file #
     ! ######################
-    !open(20,file='geometry')
-    open(20,file=trim(input_fname))
+    open(20,file=trim(input_fname),status='old')
     read(20,*) bnat
     read(20,*)
     allocate(geom(3,bnat))
@@ -67,15 +67,18 @@ subroutine read_input(input_fname,pah)
     allocate(pah%neighbornumber(pah%nat))
     allocate(pah%neighborlist(pah%nat,3))
     pah%neighbornumber=0
-    allocate(pah%indexmapping(pah%nat))
-    do i=1, pah%nat
-        pah%indexmapping(i) = rmap(i)
-    end do
 
-    pah%doublebondnumber = 0
-    allocate(pah%doublebondlist(2,pah%nat))
-    pah%ringnumber = 0
-    allocate(pah%ringlist(6,pah%nat))
+    if (options%print_intermediate_structures) then
+        allocate(pah%indexmapping(pah%nat))
+        do i=1, pah%nat
+            pah%indexmapping(i) = rmap(i)
+        end do
+
+        pah%doublebondnumber = 0
+        allocate(pah%doublebondlist(2,pah%nat))
+        pah%ringnumber = 0
+        allocate(pah%ringlist(6,pah%nat))
+    end if
 
     ! #######################
     ! # find neighbor table #

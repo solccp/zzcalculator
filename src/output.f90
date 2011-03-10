@@ -15,22 +15,27 @@ contains
     subroutine write_connections(pah)
         use types_module
         use structure_module
+        use options_m
         type(structure), intent(in) :: pah
         logical, parameter :: flow = .true.
         integer(kint) :: i
         integer(kint), save :: output_index = 0
 
 
-        if (output_index > 100) then
-            return
-        endif 
+        if (pah%ringnumber < options%print_order) then
+            return 
+        end if
 
         if (output_unit < 0) then
             call open_file()
         end if
-        
 
+
+        
         output_index = output_index +1
+
+
+
         write(output_unit,'(a)') '---'
         write(output_unit,'(a,I0)') 'structure_id: ', output_index
         write(output_unit,'(a,I0)') 'number_of_atoms: ', pah%doublebondnumber*2+pah%ringnumber*6

@@ -7,6 +7,7 @@ subroutine find_ZZ_polynomial(pah,level)
     use types_module
     use structure_module
     use output
+    use options_m
     implicit none
     type(structure), intent(inout) :: pah
     integer(kint), intent(in) :: level
@@ -20,10 +21,13 @@ subroutine find_ZZ_polynomial(pah,level)
         pah%order = 0
         allocate(pah%polynomial(pah%order+1))
         pah%polynomial(1) = setvli(1_kint)
-        if (pah%hasDisconnectedParent) then
-            call write_connections_partial(pah)
-        else
-            call write_connections(pah)
+
+        if (options%print_intermediate_structures) then
+            if (pah%hasDisconnectedParent) then
+                call write_connections_partial(pah)
+            else
+                call write_connections(pah)
+            end if
         end if
 
 ! ##########################################
@@ -53,7 +57,9 @@ subroutine find_ZZ_polynomial(pah,level)
             call split_and_decompose(pah,medat,level)
         end if
     end if
-  return
+
+
+    return
 
 end subroutine find_ZZ_polynomial
 !####################################################################################
