@@ -89,6 +89,7 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     use types_module
     use structure_module
     use options_m
+    use temp_space
     implicit none
     type(structure), intent(in) :: pah
     type(structure), intent(inout) :: pah1
@@ -97,20 +98,22 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     logical, intent(in) :: ring_exist
 
     integer(kint) :: j,i,k,l,m
-    integer(kint), dimension(:), allocatable :: map
-    logical, dimension(:), allocatable :: offlist
 
-    allocate(map(pah%nat))
-    allocate(offlist(pah%nat))
+!    map => int_1darray_1
+!    offlist => bool_1darray_1
+!####################################
+!# int_1darray_1 use as mapping     #
+!# bool_1darray_1 use as offlist    #
+!####################################
 
-    map(1:pah%nat)=0
-    offlist(1:pah%nat)=.true.
+    int_1darray_1(1:pah%nat)=0
+    bool_1darray_1(1:pah%nat)=.true.
 
 ! ########################################  
 ! # logical vector of atoms for deleting #
 ! ########################################  
     forall (i=1:nelim)
-        offlist(delatoms(i))=.false.
+        bool_1darray_1(delatoms(i))=.false.
     end forall
 
 ! #####################################
@@ -165,9 +168,9 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 ! #############################
     j=0
     do i=1,pah%nat
-        if (offlist(i)) then
+        if (bool_1darray_1(i)) then
             j=j+1
-            map(i)=j
+            int_1darray_1(i)=j
         end if
     end do
 
@@ -175,22 +178,22 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 ! # create the structure with deleted atoms #
 ! ###########################################
     do i=1,pah%nat
-        if (map(i) /= 0) then 
+        if (int_1darray_1(i) /= 0) then 
             k=0
             do l=1,pah%neighbornumber(i)
-                m=map(pah%neighborlist(i,l))
+                m=int_1darray_1(pah%neighborlist(i,l))
                 if (m /= 0) then
                     k = k + 1
-                    pah1%neighborlist(map(i),k) = m
+                    pah1%neighborlist(int_1darray_1(i),k) = m
                 end if
             end do
-            pah1%neighbornumber(map(i)) = k
+            pah1%neighbornumber(int_1darray_1(i)) = k
         end if
     end do
     if (options%print_intermediate_structures) then
         do i=1,pah%nat
-            if (map(i) /= 0) then 
-                pah1%indexmapping(map(i)) = pah%indexmapping(i)
+            if (int_1darray_1(i) /= 0) then 
+                pah1%indexmapping(int_1darray_1(i)) = pah%indexmapping(i)
             end if
         end do
     end if
@@ -200,13 +203,10 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 ! # translate to the new atom numbering #
 ! #######################################
     forall (i=1:pah1%nbondlistentries, j=1:2)
-        pah1%bondlist(j,i)=map(pah%bondlist(j,i))
+        pah1%bondlist(j,i)=int_1darray_1(pah%bondlist(j,i))
     end forall
 
-
     call clean_bond_list(pah1)
-    deallocate(map)
-    deallocate(offlist)
     return
 
 end subroutine create_noatoms_daughter

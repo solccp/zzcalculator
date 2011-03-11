@@ -21,6 +21,7 @@ module structure_module
 
 contains 
     subroutine destory(pah)
+        use options_m
         type(structure), intent(inout) :: pah
         if (allocated(pah%initiallabel)) then
             deallocate(pah%initiallabel)
@@ -40,11 +41,15 @@ contains
         if (allocated(pah%bondlist)) then
             deallocate(pah%bondlist)
         end if
-        if (allocated(pah%doublebondlist)) then
-            deallocate(pah%doublebondlist)
-        end if
-        if (allocated(pah%ringlist)) then
-            deallocate(pah%ringlist)
+
+        if (options%print_intermediate_structures) then
+
+            if (allocated(pah%doublebondlist)) then
+                deallocate(pah%doublebondlist)
+            end if
+            if (allocated(pah%ringlist)) then
+                deallocate(pah%ringlist)
+            end if
         end if
     end subroutine
 

@@ -8,16 +8,16 @@ subroutine cut_dangling_bonds(pah)
 !
     use types_module
     use structure_module
+    use temp_space
     implicit none
     type(structure), intent(inout) :: pah
 
     integer(kint) :: atom1,atom2, atom3, atom4,i,j,k,m,nelim
-    integer(kint), dimension(:), allocatable :: atoms
     type(structure) :: pah1
     logical :: has_dangling_bonds
 
     nelim=0
-    allocate(atoms(pah%nat))
+!    atoms => int_1darray_2
 
 ! ############################
 ! # eliminate dangling bonds #
@@ -45,8 +45,8 @@ subroutine cut_dangling_bonds(pah)
             pah%neighbornumber(atom2) = 0
             pah%neighborlist(atom1,1:3) = 0
             pah%neighborlist(atom2,1:3) = 0
-            atoms(nelim+1)=atom1
-            atoms(nelim+2)=atom2
+            int_1darray_2(nelim+1)=atom1
+            int_1darray_2(nelim+2)=atom2
             nelim=nelim+2
         end if
     end do
@@ -61,10 +61,9 @@ subroutine cut_dangling_bonds(pah)
 ! ##########################################
 ! # otherwise create the reduced structure #
 ! ##########################################
-    call create_noatoms_daughter(pah,pah1,nelim,atoms,.false.)
+    call create_noatoms_daughter(pah,pah1,nelim,int_1darray_2,.false.)
     pah = pah1
     call destory(pah1)
-    deallocate(atoms)
     return
 
 end subroutine cut_dangling_bonds
@@ -205,11 +204,11 @@ subroutine find_edge_ring(pah,sextet,atom1,atom2,ring_exists)
                                 if (atom6 /= atom2) then
                                     do m=1,pah%neighbornumber(atom5)
                                         if (atom6 == pah%neighborlist(atom5,m)) then
-                                            sextet(3)=atom4
-                                            sextet(4)=atom6
-                                            sextet(5)=atom5
-                                            sextet(6)=atom3
-                                            ring_exists=.true.
+                                            sextet(3) = atom4
+                                            sextet(4) = atom6
+                                            sextet(5) = atom5
+                                            sextet(6) = atom3
+                                            ring_exists = .true.
                                             exit outer
                                         end if
                                     end do
@@ -244,25 +243,24 @@ subroutine check_if_connected(pah,medat)
     use types_module
     use structure_module
     use options_m
+    use temp_space
     implicit none
     type(structure), intent(inout) :: pah
     integer(kint), intent(out) :: medat
 
     type(structure) :: pah1
     integer(kint) :: i,j,k,lnat,start
-    integer(kint), dimension(:), allocatable :: map
-    logical, dimension(:), allocatable :: visit_list
 
-    allocate(map(pah%nat))
-    allocate(visit_list(pah%nat))
+!    map => int_1darray_1
+!    visit_list => bool_1darray_1
 
 ! #########################################################
 ! # find the connected cluster of atoms containing atom 1 #
 ! #########################################################
-    lnat=0
+    lnat = 0
     start = 1
-    visit_list(1:pah%nat)=.false.
-    call dfs(pah,pah%nat,visit_list,lnat)
+    bool_1darray_1(1:pah%nat) = .false.
+    call dfs(pah, pah%nat, bool_1darray_1, lnat)
 
 ! ##########################################
 ! # return if all atoms are in the cluster #
@@ -280,12 +278,12 @@ subroutine check_if_connected(pah,medat)
     i = 0
     j = lnat
     do k=1,pah%nat
-        if (visit_list(k)) then
+        if (bool_1darray_1(k)) then
             i=i+1
-            map(k)=i
+            int_1darray_1(k)=i
         else
             j=j+1
-            map(k)=j
+            int_1darray_1(k)=j
         end if
     end do
 
@@ -294,7 +292,7 @@ subroutine check_if_connected(pah,medat)
     if (options%print_intermediate_structures) then
         allocate(pah1%indexmapping(pah%nat))
         do k=1,pah%nat
-            pah1%indexmapping(map(k)) = pah%indexmapping(k)
+            pah1%indexmapping(int_1darray_1(k)) = pah%indexmapping(k)
         end do
         pah%indexmapping(1:pah%nat) = pah1%indexmapping
     end if
@@ -307,9 +305,9 @@ subroutine check_if_connected(pah,medat)
     pah1%neighbornumber=0
     pah1%neighborlist=0
     do k=1,pah%nat
-        pah1%neighbornumber(map(k))=pah%neighbornumber(k)
+        pah1%neighbornumber(int_1darray_1(k))=pah%neighbornumber(k)
         do i=1,pah%neighbornumber(k)
-            pah1%neighborlist(map(k),i)=map(pah%neighborlist(k,i))
+            pah1%neighborlist(int_1darray_1(k),i)=int_1darray_1(pah%neighborlist(k,i))
         end do
     end do
     pah%neighbornumber=pah1%neighbornumber
@@ -321,12 +319,10 @@ subroutine check_if_connected(pah,medat)
 ! ######################################
     if (pah%nbondlistentries > 0) then
         forall (i=1:pah%nbondlistentries, j=1:2, pah%bondlist(j,i) /= 0)
-            pah%bondlist(j,i)=map(pah%bondlist(j,i))
+            pah%bondlist(j,i)=int_1darray_1(pah%bondlist(j,i))
         end forall
     end if
 
-    deallocate(map)
-    deallocate(visit_list)
     return
 
 end subroutine check_if_connected

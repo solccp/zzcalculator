@@ -15,6 +15,7 @@ program zhang_polynomial
     use options_m
     use getopt_m
     use output
+    use temp_space
     implicit none
     integer(kint) :: i,nhex,level=0
     type(structure) :: pah
@@ -55,10 +56,14 @@ program zhang_polynomial
         end if
     end do
 
+
+
 ! ############################################################
 ! # read initial geometry data and create topological matrix #
 ! ############################################################
     call read_input(input_fname, pah)
+
+    call initialize_temp_space(pah%nat)
 
 ! #############################################################
 ! # find recursively the ZZ polynomial of the given structure #
@@ -71,6 +76,7 @@ program zhang_polynomial
     call print_ZZ_polynomial(pah)
 
     call close_file()
+    call finalize_temp_space()
 
 end
 !####################################################################################

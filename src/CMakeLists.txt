@@ -24,7 +24,7 @@ if( CMAKE_Fortran_COMPILER_ID STREQUAL Intel )
     
     if (CMAKE_BUILD_TYPE STREQUAL Release)
         set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc -ipo")
-        set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-ipo -O3 -funroll-loops")
+        set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-ipo -O3 -funroll-loops -no-prec-div")
         set(CMAKE_Fortran_FLAGS_RELEASE "")
     endif (CMAKE_BUILD_TYPE STREQUAL Release)
     set(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "")
