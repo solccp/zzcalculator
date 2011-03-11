@@ -63,7 +63,6 @@ subroutine read_input(input_fname,pah)
     ! ######################
     pah%nat = cnat
     pah%order = 0
-    allocate(pah%initiallabel(pah%nat))
     allocate(pah%neighbornumber(pah%nat))
     allocate(pah%neighborlist(pah%nat,3))
     pah%neighbornumber=0
@@ -84,7 +83,6 @@ subroutine read_input(input_fname,pah)
     ! # find neighbor table #
     ! #######################
     do i=1, cnat
-        pah%initiallabel(i) = i
         do j=i+1, cnat
             if (dist(cnat,i,j,geom) < ccdist) then
                 pah%neighbornumber(i)=pah%neighbornumber(i)+1

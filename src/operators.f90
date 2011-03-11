@@ -1,4 +1,63 @@
 !######################## subroutine cut_dangling_bonds #############################
+subroutine remove_atom(pah, atom, r1)
+    use types_module
+    use structure_module
+    implicit none
+    type(structure), intent(inout) :: pah
+    integer(kint), intent(in) :: atom
+    integer(kint), intent(out) :: r1
+
+    integer(kint) :: i, j, k
+    integer(kint) :: n1
+    
+    r1 = pah%nat
+    if ( r1 == atom ) then
+        do j=1, pah%neighbornumber(r1)
+            n1 = pah%neighborlist(r1, j)
+            do k = 1, pah%neighbornumber(n1)
+                if (pah%neighborlist(n1,k) == r1 ) then
+                    pah%neighborlist(n1,k:3-1) = pah%neighborlist(n1,k+1:3)
+                    pah%neighbornumber(n1) = pah%neighbornumber(n1) - 1
+                    exit
+                end if
+            end do
+        end do
+        pah%neighbornumber(r1) = 0
+        pah%neighborlist(r1,:) = -1
+        pah%nat = pah%nat - 1
+    else
+        do j=1, pah%neighbornumber(atom)
+            n1 = pah%neighborlist(atom, j)
+            do k = 1, pah%neighbornumber(n1)
+                if (pah%neighborlist(n1,k) == atom ) then
+                    pah%neighborlist(n1,k:3-1) = pah%neighborlist(n1,k+1:3)
+                    pah%neighbornumber(n1) = pah%neighbornumber(n1) - 1
+                    exit
+                end if
+            end do
+        end do
+            
+        pah%neighbornumber(atom) = pah%neighbornumber(r1)
+        pah%neighborlist(atom,:) = pah%neighborlist(r1,:)
+        do j=1, pah%neighbornumber(r1)
+            n1 = pah%neighborlist(r1, j)
+            do k = 1, pah%neighbornumber(n1)
+                if (pah%neighborlist(n1,k) == r1 ) then
+                    pah%neighborlist(n1,k) = atom
+                    exit
+                end if
+            end do
+        end do
+        pah%neighbornumber(r1) = 0
+        pah%neighborlist(r1,:) = -1
+        pah%nat = pah%nat - 1
+    end if
+
+
+end subroutine
+
+
+
 !####################################################################################
 subroutine cut_dangling_bonds(pah)
 !
@@ -8,16 +67,13 @@ subroutine cut_dangling_bonds(pah)
 !
     use types_module
     use structure_module
-    use temp_space
+    use options_m
     implicit none
     type(structure), intent(inout) :: pah
 
-    integer(kint) :: atom1,atom2, atom3, atom4,i,j,k,m,nelim
+    integer(kint) :: atom1, atom2, r1, r2
     type(structure) :: pah1
     logical :: has_dangling_bonds
-
-    nelim=0
-!    atoms => int_1darray_2
 
 ! ############################
 ! # eliminate dangling bonds #
@@ -27,44 +83,23 @@ subroutine cut_dangling_bonds(pah)
         call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
         if (has_dangling_bonds) then
             atom2 = pah%neighborlist(atom1,1)
-            do i=1, pah%neighbornumber(atom2)
-                atom3 = pah%neighborlist(atom2,i)
-                if (atom3 /= atom1) then
-                    k=0
-                    do j=1, pah%neighbornumber(atom3)
-                        atom4 = pah%neighborlist(atom3,j)
-                        if (atom4 /= atom2) then
-                            k=k+1
-                            pah%neighborlist(atom3,k) = atom4
-                        end if
-                    end do
-                    pah%neighbornumber(atom3) = k
-                end if
-            end do
-            pah%neighbornumber(atom1) = 0
-            pah%neighbornumber(atom2) = 0
-            pah%neighborlist(atom1,1:3) = 0
-            pah%neighborlist(atom2,1:3) = 0
-            int_1darray_2(nelim+1)=atom1
-            int_1darray_2(nelim+2)=atom2
-            nelim=nelim+2
+            if ( pah%nat == atom1) then
+                call remove_atom(pah, atom1, r1)
+                call remove_atom(pah, atom2, r2)
+            else
+                call remove_atom(pah, atom2, r2)
+                call remove_atom(pah, atom1, r1)
+            end if
+            if ( options%print_intermediate_structures) then
+                pah%doublebondnumber = pah%doublebondnumber + 1
+                pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
+                pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
+                pah%indexmapping(atom1) = pah%indexmapping(r1)
+                pah%indexmapping(atom2) = pah%indexmapping(r2)
+            end if
         end if
     end do
-
-! ###############################
-! # return if no dangling atoms #
-! ###############################
-    if (nelim == 0) then
-        return
-    end if
-
-! ##########################################
-! # otherwise create the reduced structure #
-! ##########################################
-    call create_noatoms_daughter(pah,pah1,nelim,int_1darray_2,.false.)
-    pah = pah1
-    call destory(pah1)
-    return
+    
 
 end subroutine cut_dangling_bonds
 !####################################################################################
@@ -310,8 +345,8 @@ subroutine check_if_connected(pah,medat)
             pah1%neighborlist(int_1darray_1(k),i)=int_1darray_1(pah%neighborlist(k,i))
         end do
     end do
-    pah%neighbornumber=pah1%neighbornumber
-    pah%neighborlist=pah1%neighborlist
+    pah%neighbornumber(:pah%nat)=pah1%neighbornumber(:pah%nat)
+    pah%neighborlist(:pah%nat,:)=pah1%neighborlist(:pah%nat,:)
   
 
 ! ######################################

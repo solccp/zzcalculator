@@ -3,14 +3,14 @@ module structure_module
     use types_module
     type,public :: structure
         integer(kint) :: nat
-        integer(kint),allocatable,dimension(:) :: initiallabel
         integer(kint),allocatable,dimension(:) :: neighbornumber
         integer(kint),allocatable,dimension(:,:) :: neighborlist
-        integer(kint),allocatable,dimension(:) :: indexmapping
         integer(kint) :: order
         type(vlonginteger),allocatable,dimension(:) :: polynomial
         integer(kint), allocatable,dimension(:,:) :: bondlist
         integer(kint) :: nbondlistentries
+
+        integer(kint),allocatable,dimension(:) :: indexmapping
         integer(kint) :: doublebondnumber
         integer(kint), allocatable, dimension(:,:) :: doublebondlist
         integer(kint) :: ringnumber
@@ -23,9 +23,6 @@ contains
     subroutine destory(pah)
         use options_m
         type(structure), intent(inout) :: pah
-        if (allocated(pah%initiallabel)) then
-            deallocate(pah%initiallabel)
-        end if
         if (allocated(pah%neighbornumber)) then
             deallocate(pah%neighbornumber)
         end if
