@@ -269,8 +269,10 @@ end subroutine find_edge_ring
 subroutine swap_int(int1, int2)
     use types_module
     integer(kint), intent(inout) :: int1, int2
-    int1 = int1 + int2
-    int2 = int1 - int2
+    integer(kint) :: temp
+    temp = int1
+    int1 = int2
+    int2 = temp
 end subroutine
 
 !######################## subroutine check_if_connected #############################
@@ -294,7 +296,7 @@ subroutine check_if_connected(pah,medat)
     integer(kint), intent(out) :: medat
 
     type(structure) :: pah1
-    integer(kint) :: i,j,k,lnat,start
+    integer(kint) :: i,j,k,lnat,start, l, n1
 
 !    map => int_1darray_1
 !    visit_list => bool_1darray_1
@@ -317,46 +319,93 @@ subroutine check_if_connected(pah,medat)
         medat = lnat+1
     end if
 
-! ##################################################
-! # find the mapping for the reorderred structure  #
-! ##################################################
-    i = 0
-    j = lnat
-    do k=1,pah%nat
-        if (bool_1darray_1(k)) then
-            i=i+1
-            int_1darray_1(k)=i
-        else
-            j=j+1
-            int_1darray_1(k)=j
+    i = 1
+    j = pah%nat
+    do while( i < j )
+        do while( bool_1darray_1(i) )
+            int_1darray_1(i) = i
+            i = i + 1
+        end do
+        do while( .not. bool_1darray_1(j) )
+            int_1darray_1(j) = j
+            j = j - 1
+        end do
+        if ( i >= j ) then
+            exit
         end if
+        if (options%print_intermediate_structures) then
+            call swap_int(pah%indexmapping(i), pah%indexmapping(j))
+        end if
+        call swap_int(pah%neighbornumber(i), pah%neighbornumber(j))
+        do k = 1, 3
+            call swap_int(pah%neighborlist(i,k), pah%neighborlist(j,k))
+        end do
+        do k = 1, pah%neighbornumber(i)
+            n1 = pah%neighborlist(i, k)
+            do l = 1, pah%neighbornumber(n1) 
+                if ( pah%neighborlist(n1,l) == j ) then
+                    pah%neighborlist(n1,l) = i
+                    exit
+                end if
+            end do
+        end do
+        do k = 1, pah%neighbornumber(j)
+            n1 = pah%neighborlist(j, k)
+            do l = 1, pah%neighbornumber(n1) 
+                if ( pah%neighborlist(n1,l) == i ) then
+                    pah%neighborlist(n1,l) = j
+                    exit
+                end if
+            end do
+        end do
+        int_1darray_1(i) = j
+        int_1darray_1(j) = i
+        i = i + 1
+        j = j - 1
+        
     end do
 
 
+! ##################################################
+! # find the mapping for the reorderred structure  #
+! ##################################################
+!    i = 0
+!    j = lnat
+!    do k=1,pah%nat
+!        if (bool_1darray_1(k)) then
+!            i=i+1
+!            int_1darray_1(k)=i
+!        else
+!            j=j+1
+!            int_1darray_1(k)=j
+!        end if
+!    end do
 
-    if (options%print_intermediate_structures) then
-        do k=1,pah%nat
-            int_1darray_2(int_1darray_1(k)) = pah%indexmapping(k)
-        end do
-        pah%indexmapping(1:pah%nat) = int_1darray_2(1:pah%nat)
-    end if
+
+
+!    if (options%print_intermediate_structures) then
+!        do k=1,pah%nat
+!            int_1darray_2(int_1darray_1(k)) = pah%indexmapping(k)
+!        end do
+!        pah%indexmapping(1:pah%nat) = int_1darray_2(1:pah%nat)
+!    end if
 
 ! ################################################
 ! # translate the structure into the new mapping #
 ! ################################################
 !    allocate(pah1%neighbornumber(pah%nat))
 
-    allocate(pah1%neighborlist(pah%nat,3))
+!    allocate(pah1%neighborlist(pah%nat,3))
 !    pah1%neighbornumber=0
 !    pah1%neighborlist=0
-    do k=1,pah%nat
-        int_1darray_2(int_1darray_1(k))=pah%neighbornumber(k)
-        do i=1, pah%neighbornumber(k)
-            pah1%neighborlist(int_1darray_1(k),i) = int_1darray_1(pah%neighborlist(k,i))
-        end do
-    end do
-    pah%neighbornumber(:pah%nat) = int_1darray_2(:pah%nat)
-    pah%neighborlist(:pah%nat,:)=pah1%neighborlist(:pah%nat,:)
+!    do k=1,pah%nat
+!        int_1darray_2(int_1darray_1(k))=pah%neighbornumber(k)
+!        do i=1, pah%neighbornumber(k)
+!            pah1%neighborlist(int_1darray_1(k),i) = int_1darray_1(pah%neighborlist(k,i))
+!        end do
+!    end do
+!    pah%neighbornumber(:pah%nat) = int_1darray_2(:pah%nat)
+!    pah%neighborlist(:pah%nat,:)=pah1%neighborlist(:pah%nat,:)
   
 
 ! ######################################
@@ -367,7 +416,7 @@ subroutine check_if_connected(pah,medat)
             pah%bondlist(j,i)=int_1darray_1(pah%bondlist(j,i))
         end forall
     end if
-    call destory(pah1)
+!    call destory(pah1)
     return
 
 end subroutine check_if_connected
