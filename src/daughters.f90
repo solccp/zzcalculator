@@ -96,12 +96,16 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     integer(kint), intent(in) :: nelim
     integer(kint), intent(in) :: delatoms(nelim)
     logical, intent(in) :: ring_exist
+
     integer(kint) :: j,i,k,l,m
 
+!    map => int_1darray_1
+!    offlist => bool_1darray_1
 !####################################
 !# int_1darray_1 use as mapping     #
 !# bool_1darray_1 use as offlist    #
 !####################################
+
     int_1darray_1(1:pah%nat)=0
     bool_1darray_1(1:pah%nat)=.true.
 
@@ -111,6 +115,21 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     forall (i=1:nelim)
         bool_1darray_1(delatoms(i))=.false.
     end forall
+
+! #####################################
+! # initialize the daughter structure #
+! #####################################
+    pah1%nat = pah%nat-nelim
+    pah1%order = 0
+    pah1%nbondlistentries = pah%nbondlistentries
+    allocate(pah1%neighbornumber(pah1%nat))
+    allocate(pah1%neighborlist(pah1%nat,3))
+    if (pah1%nbondlistentries > 0) then
+        allocate(pah1%bondlist(2,pah1%nbondlistentries))
+    end if
+    pah1%neighbornumber = 0
+    pah1%neighborlist = 0
+
 
     if (options%print_intermediate_structures) then
         allocate(pah1%indexmapping(pah%nat))
@@ -143,23 +162,6 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
         end if
 
     end if
-
-!***
-!call UBROUTINEaaa(pah,pah1,nelim)
-! #####################################
-! # initialize the daughter structure #
-! #####################################
-    pah1%nat = pah%nat-nelim
-    pah1%order = 0
-    pah1%nbondlistentries = pah%nbondlistentries
-    allocate(pah1%neighbornumber(pah1%nat))
-    allocate(pah1%neighborlist(pah1%nat,3))
-    if (pah1%nbondlistentries > 0) then
-        allocate(pah1%bondlist(2,pah1%nbondlistentries))
-    end if
-    pah1%neighbornumber = 0
-    pah1%neighborlist = 0
-!***
 
 ! #############################
 ! # create the transition map #
@@ -196,6 +198,7 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
         end do
     end if
         
+
 ! #######################################
 ! # translate to the new atom numbering #
 ! #######################################
@@ -209,28 +212,3 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 end subroutine create_noatoms_daughter
 !####################################################################################
 !#################### end of subroutine create_noatoms_daughter ######################
-
-subroutine UBROUTINEaaa(pah,pah1,nelim)
-    use types_module
-    use structure_module
-    implicit none
-    type(structure), intent(in) :: pah
-    type(structure), intent(inout) :: pah1
-    integer(kint), intent(in) :: nelim
-
-! #####################################
-! # initialize the daughter structure #
-! #####################################
-    pah1%nat = pah%nat-nelim
-    pah1%order = 0
-    pah1%nbondlistentries = pah%nbondlistentries
-    allocate(pah1%neighbornumber(pah1%nat))
-    allocate(pah1%neighborlist(pah1%nat,3))
-    if (pah1%nbondlistentries > 0) then
-        allocate(pah1%bondlist(2,pah1%nbondlistentries))
-    end if
-    pah1%neighbornumber = 0
-    pah1%neighborlist = 0
-    return
-
-end subroutine UBROUTINEaaa

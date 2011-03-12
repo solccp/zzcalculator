@@ -108,7 +108,8 @@ contains
         use structure_module
         type(structure), intent(in) :: pah, son1, son2
         type(structure) :: temp
-        integer :: ndb, nring
+        integer :: ndb1, nring1
+        integer :: ndb2, nring2
         integer :: i,j
         integer :: indexes(6)
         integer :: errorcode
@@ -125,30 +126,30 @@ contains
         do
             temp%ringnumber = pah%ringnumber
             temp%doublebondnumber = pah%doublebondnumber
-            read(son1%storage_unit,*, iostat=errorcode) ndb, nring
+            read(son1%storage_unit,*, iostat=errorcode) ndb1, nring1
             if (errorcode /= 0) exit
-            do i=1, ndb
+            do i=1, ndb1
                 read(son1%storage_unit,*) indexes(1:2)
                 temp%doublebondnumber = temp%doublebondnumber+1
                 temp%doublebondlist(:,temp%doublebondnumber) = indexes(1:2)
             end do
-            do i=1, nring
+            do i=1, nring1
                 read(son1%storage_unit,*) indexes(1:6)
                 temp%ringnumber = temp%ringnumber+1
                 temp%ringlist(:,temp%ringnumber) = indexes(1:6)
             end do
             rewind(son2%storage_unit)
             do
-                temp%doublebondnumber = pah%doublebondnumber + ndb
-                temp%ringnumber = pah%ringnumber + nring
-                read(son2%storage_unit,*, iostat=errorcode) ndb, nring
+                temp%doublebondnumber = pah%doublebondnumber + ndb1
+                temp%ringnumber = pah%ringnumber + nring1
+                read(son2%storage_unit,*, iostat=errorcode) ndb2, nring2
                 if (errorcode /= 0) exit
-                do i=1, ndb
+                do i=1, ndb2
                     read(son2%storage_unit,*) indexes(1:2)
                     temp%doublebondnumber = temp%doublebondnumber+1
                     temp%doublebondlist(:,temp%doublebondnumber) = indexes(1:2)
                 end do
-                do i=1, nring
+                do i=1, nring2
                     read(son2%storage_unit,*) indexes(1:6)
                     temp%ringnumber = temp%ringnumber+1
                     temp%ringlist(:,temp%ringnumber) = indexes(1:6)

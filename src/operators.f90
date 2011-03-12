@@ -5,38 +5,22 @@ subroutine remove_atom(pah, atom, r1)
     implicit none
     type(structure), intent(inout) :: pah
     integer(kint), intent(in) :: atom
-    integer(kint), intent(out) :: r1
+    integer(kint), intent(in) :: r1
 
     integer(kint) :: i, j, k
     integer(kint) :: n1
     
-    r1 = pah%nat
-    if ( r1 == atom ) then
-        do j=1, pah%neighbornumber(r1)
-            n1 = pah%neighborlist(r1, j)
-            do k = 1, pah%neighbornumber(n1)
-                if (pah%neighborlist(n1,k) == r1 ) then
-                    pah%neighborlist(n1,k:3-1) = pah%neighborlist(n1,k+1:3)
-                    pah%neighbornumber(n1) = pah%neighbornumber(n1) - 1
-                    exit
-                end if
-            end do
+    do j=1, pah%neighbornumber(atom)
+        n1 = pah%neighborlist(atom, j)
+        do k = 1, pah%neighbornumber(n1)
+            if (pah%neighborlist(n1,k) == atom ) then
+                pah%neighborlist(n1,k:3-1) = pah%neighborlist(n1,k+1:3)
+                pah%neighbornumber(n1) = pah%neighbornumber(n1) - 1
+                exit
+            end if
         end do
-        pah%neighbornumber(r1) = 0
-        pah%neighborlist(r1,:) = -1
-        pah%nat = pah%nat - 1
-    else
-        do j=1, pah%neighbornumber(atom)
-            n1 = pah%neighborlist(atom, j)
-            do k = 1, pah%neighbornumber(n1)
-                if (pah%neighborlist(n1,k) == atom ) then
-                    pah%neighborlist(n1,k:3-1) = pah%neighborlist(n1,k+1:3)
-                    pah%neighbornumber(n1) = pah%neighbornumber(n1) - 1
-                    exit
-                end if
-            end do
-        end do
-            
+    end do
+    if ( r1 /= atom ) then
         pah%neighbornumber(atom) = pah%neighbornumber(r1)
         pah%neighborlist(atom,:) = pah%neighborlist(r1,:)
         do j=1, pah%neighbornumber(r1)
@@ -48,15 +32,39 @@ subroutine remove_atom(pah, atom, r1)
                 end if
             end do
         end do
-        pah%neighbornumber(r1) = 0
-        pah%neighborlist(r1,:) = -1
-        pah%nat = pah%nat - 1
     end if
+    
+    pah%neighbornumber(r1) = 0
+    pah%nat = pah%nat - 1
 
 
 end subroutine
 
+subroutine get_remove_indexes(pah, atom1, atom2, r1, r2)
+    use types_module
+    use structure_module
+    implicit none
+    type(structure), intent(in) :: pah
+    integer(kint), intent(out) :: r1, r2
+    integer(kint), intent(in) :: atom1, atom2
+    integer(kint) :: temp
 
+    r1 = pah%nat 
+    if (r1 == atom2) then
+        r2 = r1
+        r1 = r1 - 1
+    else
+        r2 = r1 - 1
+    end if
+
+    if (r2 == atom1) then
+        temp = r2
+        r2 = r1
+        r1 = temp
+    end if
+
+        
+end subroutine
 
 !####################################################################################
 subroutine cut_dangling_bonds(pah)
@@ -71,32 +79,52 @@ subroutine cut_dangling_bonds(pah)
     implicit none
     type(structure), intent(inout) :: pah
 
-    integer(kint) :: atom1, atom2, r1, r2
+    integer(kint) :: atom1, atom2, r1, r2, i1, i2
     type(structure) :: pah1
-    logical :: has_dangling_bonds
+    logical :: has_dangling_bonds, switched
 
 ! ############################
 ! # eliminate dangling bonds #
 ! ############################
     has_dangling_bonds=.true.
+    switched = .false.
     do while (has_dangling_bonds)
         call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
         if (has_dangling_bonds) then
             atom2 = pah%neighborlist(atom1,1)
-            if ( pah%nat == atom1) then
-                call remove_atom(pah, atom1, r1)
-                call remove_atom(pah, atom2, r2)
-            else
-                call remove_atom(pah, atom2, r2)
-                call remove_atom(pah, atom1, r1)
-            end if
+            call get_remove_indexes(pah, atom1, atom2, r1, r2)
             if ( options%print_intermediate_structures) then
+                i1 = pah%indexmapping(r1)
+                i2 = pah%indexmapping(r2)
                 pah%doublebondnumber = pah%doublebondnumber + 1
                 pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
                 pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
-                pah%indexmapping(atom1) = pah%indexmapping(r1)
-                pah%indexmapping(atom2) = pah%indexmapping(r2)
-            end if
+                pah%indexmapping(atom1) = i1
+                pah%indexmapping(atom2) = i2
+            endif
+
+            call remove_atom(pah, atom1, r1)
+            call remove_atom(pah, atom2, r2)
+!            if ( options%print_intermediate_structures) then
+!                i2 = pah%indexmapping(r2)
+!                if (r1 == atom2) then
+!                    i1 = i2
+!                else
+!                    i1 = pah%indexmapping(r1)
+!                end if
+!                pah%doublebondnumber = pah%doublebondnumber + 1
+!                pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
+!                pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
+
+                !if (switched) then
+                !    pah%indexmapping(atom1) = i2
+                !    pah%indexmapping(atom2) = i1
+                !else
+!                    pah%indexmapping(atom1) = i1
+!                    pah%indexmapping(atom2) = i2
+                !end if
+                    
+!            end if
         end if
     end do
     
