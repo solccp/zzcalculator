@@ -79,52 +79,29 @@ subroutine cut_dangling_bonds(pah)
     implicit none
     type(structure), intent(inout) :: pah
 
-    integer(kint) :: atom1, atom2, r1, r2, i1, i2
+    integer(kint) :: atom1, atom2, r1, r2
     type(structure) :: pah1
-    logical :: has_dangling_bonds, switched
+    logical :: has_dangling_bonds
 
 ! ############################
 ! # eliminate dangling bonds #
 ! ############################
-    has_dangling_bonds=.true.
-    switched = .false.
+    has_dangling_bonds = .true.
     do while (has_dangling_bonds)
         call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
         if (has_dangling_bonds) then
             atom2 = pah%neighborlist(atom1,1)
             call get_remove_indexes(pah, atom1, atom2, r1, r2)
             if ( options%print_intermediate_structures) then
-                i1 = pah%indexmapping(r1)
-                i2 = pah%indexmapping(r2)
                 pah%doublebondnumber = pah%doublebondnumber + 1
                 pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
                 pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
-                pah%indexmapping(atom1) = i1
-                pah%indexmapping(atom2) = i2
+                pah%indexmapping(atom1) = pah%indexmapping(r1)
+                pah%indexmapping(atom2) = pah%indexmapping(r2)
             endif
 
             call remove_atom(pah, atom1, r1)
             call remove_atom(pah, atom2, r2)
-!            if ( options%print_intermediate_structures) then
-!                i2 = pah%indexmapping(r2)
-!                if (r1 == atom2) then
-!                    i1 = i2
-!                else
-!                    i1 = pah%indexmapping(r1)
-!                end if
-!                pah%doublebondnumber = pah%doublebondnumber + 1
-!                pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
-!                pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
-
-                !if (switched) then
-                !    pah%indexmapping(atom1) = i2
-                !    pah%indexmapping(atom2) = i1
-                !else
-!                    pah%indexmapping(atom1) = i1
-!                    pah%indexmapping(atom2) = i2
-                !end if
-                    
-!            end if
         end if
     end do
     
@@ -151,7 +128,7 @@ subroutine check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
 
     integer(kint) :: i
 
-    has_dangling_bonds=.false.
+    has_dangling_bonds = .false.
     do i=1, pah%nat
         if (pah%neighbornumber(i) == 1) then
             atom1 = i
@@ -289,7 +266,12 @@ end subroutine find_edge_ring
 !####################################################################################
 !######################## end of subroutine find_edge_ring ##########################
 
-
+subroutine swap_int(int1, int2)
+    use types_module
+    integer(kint), intent(inout) :: int1, int2
+    int1 = int1 + int2
+    int2 = int1 - int2
+end subroutine
 
 !######################## subroutine check_if_connected #############################
 !####################################################################################
@@ -353,27 +335,27 @@ subroutine check_if_connected(pah,medat)
 
 
     if (options%print_intermediate_structures) then
-        allocate(pah1%indexmapping(pah%nat))
         do k=1,pah%nat
-            pah1%indexmapping(int_1darray_1(k)) = pah%indexmapping(k)
+            int_1darray_2(int_1darray_1(k)) = pah%indexmapping(k)
         end do
-        pah%indexmapping(1:pah%nat) = pah1%indexmapping
+        pah%indexmapping(1:pah%nat) = int_1darray_2(1:pah%nat)
     end if
 
 ! ################################################
 ! # translate the structure into the new mapping #
 ! ################################################
-    allocate(pah1%neighbornumber(pah%nat))
+!    allocate(pah1%neighbornumber(pah%nat))
+
     allocate(pah1%neighborlist(pah%nat,3))
-    pah1%neighbornumber=0
-    pah1%neighborlist=0
+!    pah1%neighbornumber=0
+!    pah1%neighborlist=0
     do k=1,pah%nat
-        pah1%neighbornumber(int_1darray_1(k))=pah%neighbornumber(k)
-        do i=1,pah%neighbornumber(k)
-            pah1%neighborlist(int_1darray_1(k),i)=int_1darray_1(pah%neighborlist(k,i))
+        int_1darray_2(int_1darray_1(k))=pah%neighbornumber(k)
+        do i=1, pah%neighbornumber(k)
+            pah1%neighborlist(int_1darray_1(k),i) = int_1darray_1(pah%neighborlist(k,i))
         end do
     end do
-    pah%neighbornumber(:pah%nat)=pah1%neighbornumber(:pah%nat)
+    pah%neighbornumber(:pah%nat) = int_1darray_2(:pah%nat)
     pah%neighborlist(:pah%nat,:)=pah1%neighborlist(:pah%nat,:)
   
 
@@ -385,7 +367,7 @@ subroutine check_if_connected(pah,medat)
             pah%bondlist(j,i)=int_1darray_1(pah%bondlist(j,i))
         end forall
     end if
-
+    call destory(pah1)
     return
 
 end subroutine check_if_connected
