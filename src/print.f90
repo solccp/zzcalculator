@@ -80,33 +80,10 @@ subroutine print_int_in_string(pos,string,val)
     implicit none
     integer(kint) :: val,pos
     character(len=500) :: string
+    integer, parameter :: int_len = range(val)
 
-    select case (val)
-    case (0:9)
-        write(string(pos:),'(i1)')val
-        pos=pos+1
-    case (10:99)
-        write(string(pos:),'(i2)')val
-        pos=pos+2
-    case (100:999)
-        write(string(pos:),'(i3)')val
-        pos=pos+3
-    case (1000:9999)
-        write(string(pos:),'(i4)')val
-        pos=pos+4
-    case (10000:99999)
-        write(string(pos:),'(i5)')val
-        pos=pos+5
-    case (100000:999999)
-        write(string(pos:),'(i6)')val
-        pos=pos+6
-    case (1000000:9999999)
-        write(string(pos:),'(i7)')val
-        pos=pos+7
-    case default
-        write(string(pos:),'(i20)')val
-        pos=pos+20
-    end select
+    write(string(pos:),'(i0)')val
+    pos = pos + len(trim(string(pos:pos+int_len)))
     return
 end subroutine print_int_in_string
 !####################################################################################

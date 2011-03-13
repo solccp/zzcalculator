@@ -9,6 +9,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 cmake_minimum_required(VERSION 2.6)
 
 option(PROFILING "set profiling flags" OFF)
+option(PARALLEL "set parallel flags" OFF)
 
 # Appends the cmake/modules path inside the MAKE_MODULE_PATH variable which stores the
 # directories of additional CMake modules (eg MacroOutOfSourceBuild.cmake):

@@ -99,8 +99,6 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
 
     integer(kint) :: j,i,k,l,m
 
-!    map => int_1darray_1
-!    offlist => bool_1darray_1
 !####################################
 !# int_1darray_1 use as mapping     #
 !# bool_1darray_1 use as offlist    #

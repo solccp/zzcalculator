@@ -5,9 +5,16 @@ module types_module
     integer, parameter :: kint = 8
     integer, parameter :: kreal = kind(0.0d0)
 
+    integer(kint), parameter :: desired_digits = 60
+
+    integer, parameter :: entry_power = (range(1_kint)+1)/2
+    integer, parameter :: block_size = ceiling( real(desired_digits) / real(entry_power))
+
+    integer(kint), parameter :: block_max = 10**entry_power
+
     type, public :: vlonginteger
         integer :: leadpow
-        integer(kint) :: tabl(40)
+        integer(kint) :: tabl(block_size)
     end type vlonginteger
 
 
@@ -19,13 +26,13 @@ function setvli(a) result(c)
     integer(kint) :: b,i
     type(vlonginteger) :: c
 
-    c%tabl=0
-    b=a
-    do i=1,40
-        c%tabl(i)=mod(b,10000_kint)
-        b=(b-c%tabl(i))/10000_kint
+    c%tabl = 0
+    b = a
+    do i=1, block_size
+        c%tabl(i) = mod(b,block_max)
+        b = (b-c%tabl(i)) /block_max
         if (b == 0) then
-            c%leadpow=i
+            c%leadpow = i
             exit
         end if
     end do
@@ -39,26 +46,26 @@ function addvli(a,b) result(c)
     type(vlonginteger) :: c
     integer(kint) :: i,val
 
-    c%tabl=0
-    c%leadpow=max(a%leadpow,b%leadpow)
-    do i=1,c%leadpow
-        c%tabl(i)=c%tabl(i)+a%tabl(i)+b%tabl(i)
+    c%tabl = 0
+    c%leadpow = max(a%leadpow, b%leadpow)
+    do i=1, c%leadpow
+        c%tabl(i) = c%tabl(i)+a%tabl(i)+b%tabl(i)
     end do
-    do i=1,min(39,c%leadpow)
-        if (c%tabl(i) >= 10000_kint) then
-            val=mod(c%tabl(i),10000_kint)
-            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i)-val)/10000_kint
-            c%tabl(i)=val
+    do i=1, min(block_size-1, c%leadpow)
+        if (c%tabl(i) >= block_max) then
+            val = mod(c%tabl(i),block_max)
+            c%tabl(i+1) = c%tabl(i+1) + (c%tabl(i))/block_max
+            c%tabl(i) = val
         end if
     end do
 
-    if (c%tabl(40) >= 10000_kint) then
+    if (c%tabl(block_size) >= block_max ) then
         print*,"overflow in addvli, enlarge size of tabl"
         stop
     end if
  
-    if (c%leadpow < 40) then  
-        if (c%tabl(c%leadpow+1) /= 0) c%leadpow=c%leadpow+1
+    if (c%leadpow < block_size) then  
+        if (c%tabl(c%leadpow+1) /= 0) c%leadpow = c%leadpow+1
     end if
 
 end function addvli
@@ -69,29 +76,29 @@ function multvli(a,b) result(c)
     type(vlonginteger) :: c
     integer(kint) :: i,j,val
 
-    c%tabl=0
-    do i=1,a%leadpow
-        do j=1,min(40-i,b%leadpow)
+    c%tabl = 0
+    do i=1, a%leadpow
+        do j=1, min(block_size-i,b%leadpow)
             c%tabl(i+j-1)=c%tabl(i+j-1)+a%tabl(i)*b%tabl(j)
         end do
     end do
-    do i=1,min(39,a%leadpow+b%leadpow)
-        if (c%tabl(i) >= 10000_kint) then
-            val=mod(c%tabl(i),10000_kint)
-            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i)-val)/10000_kint
+    do i=1, min(block_size,a%leadpow+b%leadpow)
+        if (c%tabl(i) >= block_max) then
+            val = mod(c%tabl(i),block_max)
+            c%tabl(i+1)=c%tabl(i+1)+(c%tabl(i))/block_max
             c%tabl(i)=val
         end if
     end do
 
-    if (c%tabl(40) >= 10000) then
+    if (c%tabl(block_size) >= block_max) then
         print*,"overflow in multvli, enlarge size of tabl"
         stop
     end if
 
-    c%leadpow=0
-    do i=min(40,a%leadpow+b%leadpow+1),1,-1
+    c%leadpow = 0
+    do i=min(block_size, a%leadpow+b%leadpow+1), 1, -1
         if (c%tabl(i) /=0) then
-            c%leadpow=i
+            c%leadpow = i
             exit
         end if
     end do
@@ -106,7 +113,7 @@ subroutine printvli(a)
     if (a%leadpow == 0) then
         write(*,*)"0"
     else
-        write(*,'(1X,I4,40I4.4)')(a%tabl(i),i=a%leadpow,1,-1)
+        write(*,'(1X,9999I0)')(a%tabl(i),i=a%leadpow,1,-1)
     end if
 
 end subroutine printvli
@@ -120,25 +127,9 @@ subroutine print_vli_in_string(pos,string,val)
     type(vlonginteger) :: val
     character(len=500) :: string
 
-    do i=val%leadpow,val%leadpow
-        select case (val%tabl(i))
-        case (0:9)
-            write(string(pos:),'(i1)')val%tabl(i)
-            pos=pos+1
-        case (10:99)
-            write(string(pos:),'(i2)')val%tabl(i)
-            pos=pos+2
-        case (100:999)
-            write(string(pos:),'(i3)')val%tabl(i)
-            pos=pos+3
-        case default
-            write(string(pos:),'(i4)')val%tabl(i)
-            pos=pos+4
-        end select
-    end do
-    do i=val%leadpow-1,1,-1
-        write(string(pos:),'(i4.4)')val%tabl(i)
-        pos=pos+4
+    do i=val%leadpow, 1, -1
+        write(string(pos:),'(I0)') val%tabl(i)
+        pos = pos + len(trim(string(pos:pos+entry_power)))
     end do
     return
 
