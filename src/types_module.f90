@@ -13,7 +13,8 @@ module types_module
     integer(kint), parameter :: block_max = 10**entry_power
 
     type, public :: vlonginteger
-        integer :: leadpow
+        sequence
+        integer(kint) :: leadpow
         integer(kint) :: tabl(block_size)
     end type vlonginteger
 

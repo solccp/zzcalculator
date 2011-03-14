@@ -16,6 +16,8 @@ program zhang_polynomial
     use getopt_m
     use output
     use temp_space
+    use mpi
+    use mpi_global
     implicit none
     integer(kint) :: i,nhex,level=0
     type(structure) :: pah
@@ -25,6 +27,11 @@ program zhang_polynomial
     integer(kint) :: input_unit
     character(len=80) :: input_fname
     character :: okey
+
+    integer :: error
+
+    call MPI_Init ( error )
+    call mpi_global_init()
 
     argc = command_argument_count()
 
@@ -56,27 +63,49 @@ program zhang_polynomial
         end if
     end do
 
+    if (options%print_intermediate_structures .and. image_count>1) then
+        if (image_id == 0) then
+            print*, 'running with MPI doesn''t support intermediate structure output'
+        end if
+        call MPI_Finalize ( error )
+        stop
+    end if
 
 
-! ############################################################
-! # read initial geometry data and create topological matrix #
-! ############################################################
+    ! ############################################################
+    ! # read initial geometry data and create topological matrix #
+    ! ############################################################
     call read_input(input_fname, pah)
 
     call initialize_temp_space(pah%nat)
 
-! #############################################################
-! # find recursively the ZZ polynomial of the given structure #
-! #############################################################
-    call find_ZZ_polynomial(pah,level)
+    if (image_id == 0) then
+        call find_ZZ_polynomial(pah, level)
+    else
+        call recv_structure(pah, level)
+        call find_ZZ_polynomial(pah, level)
+        call send_polynomial(pah)
+    end if
+    print *, image_id, 'finished jobs'
 
-! ###########################
-! # print the ZZ polynomial #
-! ###########################
-    call print_ZZ_polynomial(pah)
+    ! #############################################################
+    ! # find recursively the ZZ polynomial of the given structure #
+    ! #############################################################
 
-    call close_file()
+!    call MPI_BARRIER(MPI_COMM_WORLD, error)
+
+    ! ###########################
+    ! # print the ZZ polynomial #
+    ! ###########################
+    if ( image_id == 0 ) then
+        call print_ZZ_polynomial(pah)
+        call close_file()
+    end if
+
     call finalize_temp_space()
+
+    call mpi_global_finalize()
+    call MPI_Finalize ( error )
 
 end
 !####################################################################################
