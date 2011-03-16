@@ -1,7 +1,7 @@
 module structure_module
     
     use types_module
-    type,public :: structure
+    type, public :: structure
         integer(kint) :: nat
         integer(kint),allocatable,dimension(:) :: neighbornumber
         integer(kint),allocatable,dimension(:,:) :: neighborlist
@@ -17,7 +17,18 @@ module structure_module
         integer(kint), allocatable, dimension(:,:) :: ringlist
         logical :: hasDisconnectedParent
         integer :: storage_unit
+
+        type(structure), pointer :: child_corners => NULL()
+        type(structure), pointer :: child_bond => NULL()
+        type(structure), pointer :: child_ring => NULL()
+
+
     end type structure
+
+    type ::  pah_ptr
+        type(structure), pointer :: ptr
+    end type
+
 
 contains 
     subroutine destory(pah)

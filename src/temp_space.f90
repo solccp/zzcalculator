@@ -5,9 +5,11 @@ module temp_space
     integer(kint), dimension(:), allocatable, target :: int_1darray_1
     integer(kint), dimension(:), allocatable, target :: int_1darray_2
     logical, dimension(:), allocatable, target :: bool_1darray_1
+    integer :: initial_nat
 contains
     subroutine initialize_temp_space(nat)
         integer(kint), intent(in) :: nat
+        initial_nat = nat
         allocate(int_1darray_1(nat))
         allocate(int_1darray_2(nat))
         allocate(bool_1darray_1(nat))

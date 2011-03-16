@@ -9,7 +9,6 @@ subroutine decompose(pah,level)
 ! 
     use types_module
     use structure_module
-    use mpi_global
 
     implicit none
     type(structure), intent(in) :: pah
@@ -20,7 +19,7 @@ subroutine decompose(pah,level)
     integer(kint), dimension(6) :: sextet
     integer(kint), dimension(2) :: atoms
     logical :: ring_exists, are_neighbors
-    integer :: free_node, ring_node, bond_node
+
 
 ! #############################################
 ! # select an edge bond between atom1 & atom2 #
@@ -54,43 +53,14 @@ subroutine decompose(pah,level)
         call cut_dangling_bonds(ring)
     end if
 
+    
 ! ###############################################
 ! # find ZZ polynomials for daughter structures #
 ! ###############################################
-    if (ring_exists) then
-        if (image_id == 0) then
-            ring_node = get_free_node()    
-            if ( ring_node /= -1 ) then
-                call send_structure(ring, level+1, ring_node)
-            else
-                call find_ZZ_polynomial(ring,level+1)
-            end if
-        else
-            call find_ZZ_polynomial(ring,level+1)
-        end if
-    end if
-    
-    if (image_id == 0) then
-        bond_node = get_free_node()    
-        if ( bond_node /= -1 ) then
-            call send_structure(bond, level+1, bond_node)
-        else
-            call find_ZZ_polynomial(bond,level+1)
-        end if
-    else
-        call find_ZZ_polynomial(bond,level+1)
-    end if
-
+    call find_ZZ_polynomial(bond,level+1)
     call find_ZZ_polynomial(corners,level+1)
-    if ( image_id == 0 ) then
-        if ( ring_exists ) then
-            if ( ring_node /= -1 ) then
-                call recv_polynomial(ring, ring_node) 
-            end if
-        end if
-        if ( bond_node /= -1 ) then
-            call recv_polynomial(bond, bond_node) 
-        end if
+    if (ring_exists) then
+        call find_ZZ_polynomial(ring,level+1)
     end if
 
 
