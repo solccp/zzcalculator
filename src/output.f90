@@ -74,7 +74,7 @@ contains
         integer :: getunit 
         logical :: inuse 
         inuse = .true. 
-        getunit = 0
+        getunit = 10
         do while (inuse) 
             getunit = getunit + 1 
             INQUIRE(UNIT = getunit, OPENED = inuse) 

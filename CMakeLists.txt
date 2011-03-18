@@ -9,7 +9,8 @@ endif (NOT CMAKE_BUILD_TYPE)
 cmake_minimum_required(VERSION 2.6)
 
 option(PROFILING "set profiling flags" OFF)
-option(PARALLEL "set parallel flags" OFF)
+
+option(USE_MPI "Build parallel version with MPI library" OFF)
 
 # Appends the cmake/modules path inside the MAKE_MODULE_PATH variable which stores the
 # directories of additional CMake modules (eg MacroOutOfSourceBuild.cmake):
@@ -26,4 +27,17 @@ add_subdirectory(src)
 enable_testing()
 add_subdirectory(test)
 
-
+SET(CPACK_CMAKE_GENERATOR "Unix Makefiles")
+SET(CPACK_GENERATOR "STGZ;DEB")
+SET(CPACK_PACKAGE_NAME "ZZ_polynomial")
+SET(CPACK_PACKAGE_VENDOR "NCTU")
+SET(CPACK_PACKAGE_VERSION_MAJOR "1")
+SET(CPACK_PACKAGE_VERSION_MINOR "0")
+SET(CPACK_PACKAGE_VERSION_PATCH "0")
+SET(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
+#SET(CPACK_RESOURCE_FILE_README "README")
+#SET(CPACK_SOURCE_GENERATOR "TGZ;TZ")
+#SET(CPACK_SOURCE_STRIP_FILES "")
+SET(CPACK_SYSTEM_NAME "Linux-amd64")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Chien-Pin Chou")
+INCLUDE(CPack)

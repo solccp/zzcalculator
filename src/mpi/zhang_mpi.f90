@@ -21,28 +21,28 @@ program zhang_polynomial
     use tree
 
     implicit none
-    integer(kint) :: i,nhex,level=0
+    integer(kint) :: i, level
     type(structure) :: pah
 
 
     integer(kint) :: argc
-    integer(kint) :: input_unit
     character(len=80) :: input_fname
     character :: okey
 
     integer :: error, free_node, final_size
     logical :: reach_limit
-    integer :: run_index, j
+    integer :: j
     integer, parameter :: max_tree_size = 2187
-    integer, dimension(:), allocatable :: run_index_vec
     type(pah_ptr), dimension(max_tree_size) :: pah_array
-    logical :: terminated
 
     integer :: local_pah_count, local_ext_count, local_rank, local_calc_count
     integer, dimension(max_tree_size) :: local_index
 
     call MPI_Init ( error )
     call mpi_global_init()
+
+    level = 0
+
 
     argc = command_argument_count()
 
@@ -64,7 +64,7 @@ program zhang_polynomial
             options%print_intermediate_structures = .true.
         end if
         if(okey == 'l') then
-            read(optarg, '(i)') options%print_order
+            read(optarg, * ) options%print_order
             if (options%print_order < 0) then 
                 options%print_order = 0
             end if
@@ -94,9 +94,9 @@ program zhang_polynomial
 
     if ( image_id == 0 ) then
         if (reach_limit) then
-            print *, 'warning: number of running cores are too many to be effient.'
+            write(0, '(a)') 'warning: number of running cores are too many to be effient.'
         end if
-        print *, final_size, 'jobs were produced.'
+!        print *, final_size, 'jobs were produced.'
 !        do i=1, final_size
 !            print *, i, pah_array(i)%ptr%nat
 !        end do
@@ -110,6 +110,7 @@ program zhang_polynomial
         local_calc_count = local_calc_count + 1
     end if
 
+
     local_index = 0
     j = local_rank
     do i= 1, local_calc_count
@@ -117,13 +118,14 @@ program zhang_polynomial
         j = j + image_count
     end do
 
+!    print *, image_id, local_index(:local_calc_count)
 
     do i = 1, local_calc_count
-        write(*, '(i0, a, i0, a, i0)'), image_id, ' running ', i, ' of ' , local_calc_count
+ !       write(*, '(i0, a, i0, a, i0)'), image_id, ' running ', i, ' of ' , local_calc_count
         call find_ZZ_polynomial(pah_array(local_index(i))%ptr, level)
     end do
 
-    print *, image_id, 'local jobs finished'
+!    print *, image_id, 'local jobs finished'
     
     if ( image_id == 0 ) then
         do j = 1, image_count-1
@@ -135,6 +137,7 @@ program zhang_polynomial
         ! ###########################
         call print_ZZ_polynomial(pah)
         call close_file()
+
     else
         call send_polynomial(pah_array, local_index, local_calc_count)
         call clear_tree(pah)

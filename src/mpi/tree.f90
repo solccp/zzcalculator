@@ -136,19 +136,26 @@ subroutine build_tree(pah, image_count, max_tree_size, pah_array, final_tree_siz
 
     counter1 = 1
     pah_array(1)%ptr => pah   
- 
-    if ( counter1 > 0 .and. mod(counter1, image_count) == 0 ) then
-        final_tree_size = counter1 
+
+    if ( image_count == 0 ) then
+        final_tree_size = 1
         return
     end if
+ 
+!    if ( counter1 > 0 .and. mod(counter1, image_count) == 0 ) then
+!        final_tree_size = counter1 
+!        return
+!    end if
    
     outer: do
+        if (reach_limit) then
+            exit
+        end if
         counter2 = 0
         do while(counter1 > 0)
             cur_node => pah_array(counter1)%ptr
             if ( cur_node%nat < min_limit_nat )  then
                 reach_limit = .true.
-                exit outer
             end if 
             counter1 = counter1 - 1
 
@@ -186,15 +193,15 @@ subroutine build_tree(pah, image_count, max_tree_size, pah_array, final_tree_siz
                     cur_node%child_ring => ring
                 end if
             else
-                print *, 'found a disconnected pah, skipping decompose.'
+!                print *, 'found a disconnected pah, skipping decompose.'
                 counter2 = counter2 + 1
                 t_pah_array(counter2)%ptr => cur_node
             end if
         end do
         pah_array = t_pah_array
         counter1 = counter2
-        call sort_pah(pah_array, counter1, .false.)
-        if ( mod(counter1, image_count) == 0 .or. counter1>str_per_core*image_count ) then
+!        if ( mod(counter1, image_count) == 0 .or. counter1>str_per_core*image_count ) then
+        if ( counter1>str_per_core*image_count ) then
             exit
         end if
     end do outer   

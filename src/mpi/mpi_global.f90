@@ -6,7 +6,7 @@ module mpi_global
     save
     integer :: image_count
     integer :: image_id 
-    integer :: mpi_vli_type, mpi_row_type
+    integer :: mpi_vli_type
  
 contains
     subroutine mpi_global_init()
@@ -18,16 +18,12 @@ contains
         call MPI_TYPE_CONTIGUOUS(block_size+1, MPI_INTEGER8, mpi_vli_type, error)
         call MPI_TYPE_COMMIT(mpi_vli_type, error)
 
-        call MPI_TYPE_VECTOR(3, 1, 3, MPI_INTEGER8, mpi_row_type, error)
-        call MPI_TYPE_COMMIT(mpi_row_type, error)
-
     end subroutine
 
     subroutine mpi_global_finalize()
         integer :: error
     
         call MPI_TYPE_FREE(mpi_vli_type, error)
-        call MPI_TYPE_FREE(mpi_row_type, error)
     end subroutine
 
 

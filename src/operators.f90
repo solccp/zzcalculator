@@ -81,6 +81,16 @@ subroutine cut_dangling_bonds(pah)
     integer(kint) :: atom1, atom2, r1, r2
     type(structure) :: pah1
     logical :: has_dangling_bonds
+    integer(kint) :: remap(pah%nat), i
+    logical :: need_remapping
+
+    forall( i=1:pah%nat )
+        remap(i) = i
+    end forall
+
+    need_remapping = .false.
+
+    print *, 'before remove', pah%nat
 
 ! ############################
 ! # eliminate dangling bonds #
@@ -89,6 +99,7 @@ subroutine cut_dangling_bonds(pah)
     do while (has_dangling_bonds)
         call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
         if (has_dangling_bonds) then
+            need_remapping = .true.
             atom2 = pah%neighborlist(atom1,1)
             call get_remove_indexes(pah, atom1, atom2, r1, r2)
             if ( options%print_intermediate_structures) then
@@ -101,9 +112,41 @@ subroutine cut_dangling_bonds(pah)
 
             call remove_atom(pah, atom1, r1)
             call remove_atom(pah, atom2, r2)
+            ! #######################################
+            ! # translate to the new atom numbering #
+            ! #######################################
+
+            print *, atom1, r1
+            print *, atom2, r2
+
+            remap(r1) = atom1
+            remap(r2) = atom2
+
+            remap(atom1) = 0
+            remap(atom2) = 0
         end if
     end do
-    
+    if (need_remapping) then
+        print *, 'before remap', pah%nat
+        if ( pah%nat > 0 ) then
+            do i = 1, pah%nbondlistentries
+               print *,pah%bondlist(:,i)
+            end do
+            do i = 1, pah%nbondlistentries
+               pah%bondlist(:,i) = remap(pah%bondlist(:,i))
+            end do
+            print *, 'after remap'
+            do i = 1, pah%nbondlistentries
+                print *,pah%bondlist(:,i)
+            end do
+        end if
+    end if
+  
+    call clean_bond_list(pah)
+    print *, 'after clean'
+    do i = 1, pah%nbondlistentries
+        print *,pah%bondlist(:,i)
+    end do
 
 end subroutine cut_dangling_bonds
 !####################################################################################
