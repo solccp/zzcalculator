@@ -81,16 +81,8 @@ subroutine cut_dangling_bonds(pah)
     integer(kint) :: atom1, atom2, r1, r2
     type(structure) :: pah1
     logical :: has_dangling_bonds
-    integer(kint) :: remap(pah%nat), i
-    logical :: need_remapping
+    integer(kint) :: i, j
 
-    forall( i=1:pah%nat )
-        remap(i) = i
-    end forall
-
-    need_remapping = .false.
-
-    print *, 'before remove', pah%nat
 
 ! ############################
 ! # eliminate dangling bonds #
@@ -99,7 +91,6 @@ subroutine cut_dangling_bonds(pah)
     do while (has_dangling_bonds)
         call check_for_dangling_bonds(pah,has_dangling_bonds,atom1)
         if (has_dangling_bonds) then
-            need_remapping = .true.
             atom2 = pah%neighborlist(atom1,1)
             call get_remove_indexes(pah, atom1, atom2, r1, r2)
             if ( options%print_intermediate_structures) then
@@ -115,38 +106,18 @@ subroutine cut_dangling_bonds(pah)
             ! #######################################
             ! # translate to the new atom numbering #
             ! #######################################
-
-            print *, atom1, r1
-            print *, atom2, r2
-
-            remap(r1) = atom1
-            remap(r2) = atom2
-
-            remap(atom1) = 0
-            remap(atom2) = 0
+            do i = 1, pah%nbondlistentries
+                do j = 1, 2
+                    if ( pah%bondlist(j,i) == r1 ) pah%bondlist(j,i) = atom1
+                    if ( pah%bondlist(j,i) == r2 ) pah%bondlist(j,i) = atom2
+                    if ( pah%bondlist(j,i) == atom1 ) pah%bondlist(j,i) = 0
+                    if ( pah%bondlist(j,i) == atom2 ) pah%bondlist(j,i) = 0
+                end do
+            end do
         end if
     end do
-    if (need_remapping) then
-        print *, 'before remap', pah%nat
-        if ( pah%nat > 0 ) then
-            do i = 1, pah%nbondlistentries
-               print *,pah%bondlist(:,i)
-            end do
-            do i = 1, pah%nbondlistentries
-               pah%bondlist(:,i) = remap(pah%bondlist(:,i))
-            end do
-            print *, 'after remap'
-            do i = 1, pah%nbondlistentries
-                print *,pah%bondlist(:,i)
-            end do
-        end if
-    end if
   
     call clean_bond_list(pah)
-    print *, 'after clean'
-    do i = 1, pah%nbondlistentries
-        print *,pah%bondlist(:,i)
-    end do
 
 end subroutine cut_dangling_bonds
 !####################################################################################
@@ -411,7 +382,7 @@ subroutine check_if_connected(pah,medat)
 ! # map the bond list to the new order #
 ! ######################################
     if (pah%nbondlistentries > 0) then
-        forall (i=1:pah%nbondlistentries, j=1:2, pah%bondlist(j,i) /= 0)
+        forall (i=1:pah%nbondlistentries, j=1:2) !, pah%bondlist(j,i) /= 0)
             pah%bondlist(j,i)=int_1darray_1(pah%bondlist(j,i))
         end forall
     end if
@@ -712,8 +683,8 @@ subroutine clean_bond_list(pah)
         pah1%bondlist=0
         j=0
         do i=1,pah%nbondlistentries
-            if (pah%bondlist(1,i) /= 0) then
-                if (pah%bondlist(2,i) /= 0) then
+            if (pah%bondlist(1,i) /= 0 .and. pah%bondlist(1,i)<=pah%nat) then
+                if (pah%bondlist(2,i) /= 0 .and. pah%bondlist(2,i)<=pah%nat) then
                     if (are_neighbors(pah,pah%bondlist(1,i),pah%bondlist(2,i))) then
                         j=j+1
                         pah1%bondlist(1,j)=pah%bondlist(1,i)
