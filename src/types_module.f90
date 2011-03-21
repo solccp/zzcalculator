@@ -5,7 +5,7 @@ module types_module
     integer, parameter :: kint = 8
     integer, parameter :: kreal = kind(0.0d0)
 
-    integer(kint), parameter :: desired_digits = 60
+    integer(kint), parameter :: desired_digits = 100
 
     integer, parameter :: entry_power = (range(1_kint)+1)/2
     integer, parameter :: block_size = ceiling( real(desired_digits) / real(entry_power))

@@ -1,5 +1,10 @@
 
 
+
+-DCMAKE_INSTALL_PREFIX=/home/sol/local/ZZ_polynomial
+-DCMAKE_Fortran_COMPILER=/home/sol/local/openmpi/bin/mpif90
+-DUSE_MPI=ON
+
 Tested CMake versions:
   - v2.8.2
 

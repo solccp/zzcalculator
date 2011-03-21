@@ -97,37 +97,38 @@ subroutine read_input(input_fname,pah)
     ! # read (if provided) the preferred partition order #
     ! ####################################################
     pah%nbondlistentries=0
-    inquire(file='bondlist',exist=bondfileexists)
-    if (bondfileexists) then
-        allocate(localbondlist(2,cnat))
-        open(21,file='bondlist')
-        do
-            read(21,*,iostat=errorcode)a1,a2
-            if (errorcode == 0) then
-                pah%nbondlistentries=pah%nbondlistentries+1
-                localbondlist(1,pah%nbondlistentries)=map(a1)
-                localbondlist(2,pah%nbondlistentries)=map(a2)
-                if (a1 > bnat .or. a2 > bnat) then
-                    write(*,*)"Ooops, looks like your file: bondlist"
-                    write(*,*)"does not correspond to your input file"
-                    write(*,*)"cnat",cnat," a1,a2",a1,a2
+    if (options%has_bondlistfile) then
+        inquire(file=trim(options%bondlistfile),exist=bondfileexists)
+        if (bondfileexists) then
+            allocate(localbondlist(2,cnat))
+            open(21,file=trim(options%bondlistfile))
+            do
+                read(21,*,iostat=errorcode)a1,a2
+                if (errorcode == 0) then
+                    pah%nbondlistentries=pah%nbondlistentries+1
+                    localbondlist(1,pah%nbondlistentries)=map(a1)
+                    localbondlist(2,pah%nbondlistentries)=map(a2)
+                    if (a1 > bnat .or. a2 > bnat) then
+                        write(*,*)"Ooops, looks like your file: bondlist"
+                        write(*,*)"does not correspond to your input file"
+                        write(*,*)"cnat",cnat," a1,a2",a1,a2
+                        stop
+                    end if
+                else if (errorcode == -1) then
+                    exit
+                else
+                    write(*,*)"Ooops, reading error from the file: bondlist"
+                    write(*,*)"Verify if the file is not corrupted"
                     stop
                 end if
-            else if (errorcode == -1) then
-                exit
-            else
-                write(*,*)"Ooops, reading error from the file: bondlist"
-                write(*,*)"Verify if the file is not corrupted"
-                stop
-            end if
-        end do
-        allocate(pah%bondlist(2,pah%nbondlistentries))
-        pah%bondlist=localbondlist(:,1:pah%nbondlistentries)
-        deallocate(localbondlist)
-        close(21)
-        call clean_bond_list(pah)
+            end do
+            allocate(pah%bondlist(2,pah%nbondlistentries))
+            pah%bondlist=localbondlist(:,1:pah%nbondlistentries)
+            deallocate(localbondlist)
+            close(21)
+            call clean_bond_list(pah)
+        end if
     end if
-
 
     ! #########################################################
     ! # find all substructures with removed one aromatic ring #

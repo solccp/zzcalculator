@@ -35,7 +35,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pl:')
+        okey = getopt('Pl:b:')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -50,6 +50,10 @@ program zhang_polynomial
             if (options%print_order < 0) then 
                 options%print_order = 0
             end if
+        end if
+        if(okey == 'b') then
+            read(optarg, *) options%bondlistfile
+            options%has_bondlistfile = .true.
         end if
         if(okey == '.') then
             input_fname = optarg
