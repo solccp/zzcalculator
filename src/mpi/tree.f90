@@ -159,41 +159,48 @@ subroutine build_tree(pah, image_count, max_tree_size, pah_array, final_tree_siz
             end if 
             counter1 = counter1 - 1
 
-            call check_if_connected(cur_node,medat)
-            if ( medat == 0 ) then
+            if ( cur_node%nat > 0 ) then
 
-                call select_edge_bond(cur_node,atom1,atom2)
-                call find_edge_ring(cur_node,sextet,atom1,atom2,ring_exists)
+                call check_if_connected(cur_node,medat)
+                if ( medat == 0 ) then
+
+                    call select_edge_bond(cur_node,atom1,atom2)
+                    call find_edge_ring(cur_node,sextet,atom1,atom2,ring_exists)
        
-                allocate(bond)
-                call create_nobond_daughter(cur_node,bond,atom1,atom2)
-                call cut_dangling_bonds(bond)
-                counter2 = counter2 + 1
-                t_pah_array(counter2)%ptr => bond
-                cur_node%child_bond => bond
-
-
-                allocate(corners)
-                nelim=2
-                atoms(1)=atom1
-                atoms(2)=atom2
-                call create_noatoms_daughter(cur_node,corners,nelim,atoms,.false.)
-                call cut_dangling_bonds(corners)
-                counter2 = counter2 + 1
-                t_pah_array(counter2)%ptr => corners
-                cur_node%child_corners => corners
-
-                if (ring_exists) then
-                    allocate(ring)
-                    nelim=6
-                    call create_noatoms_daughter(cur_node,ring,nelim,sextet,.true.)
-                    call cut_dangling_bonds(ring)
+                    allocate(bond)
+                    call create_nobond_daughter(cur_node,bond,atom1,atom2)
+                    call cut_dangling_bonds(bond)
                     counter2 = counter2 + 1
-                    t_pah_array(counter2)%ptr => ring
-                    cur_node%child_ring => ring
+                    t_pah_array(counter2)%ptr => bond
+                    cur_node%child_bond => bond
+
+
+                    allocate(corners)
+                    nelim=2
+                    atoms(1)=atom1
+                    atoms(2)=atom2
+                    call create_noatoms_daughter(cur_node,corners,nelim,atoms,.false.)
+                    call cut_dangling_bonds(corners)
+                    counter2 = counter2 + 1
+                    t_pah_array(counter2)%ptr => corners
+                    cur_node%child_corners => corners
+
+                    if (ring_exists) then
+                        allocate(ring)
+                        nelim=6
+                        call create_noatoms_daughter(cur_node,ring,nelim,sextet,.true.)
+                        call cut_dangling_bonds(ring)
+                        counter2 = counter2 + 1
+                        t_pah_array(counter2)%ptr => ring
+                        cur_node%child_ring => ring
+                    end if
+                else
+!                print *, 'found a disconnected pah, skipping decompose.'
+                    counter2 = counter2 + 1
+                    t_pah_array(counter2)%ptr => cur_node
                 end if
             else
-!                print *, 'found a disconnected pah, skipping decompose.'
+                reach_limit = .true.
                 counter2 = counter2 + 1
                 t_pah_array(counter2)%ptr => cur_node
             end if

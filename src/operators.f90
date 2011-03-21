@@ -627,14 +627,14 @@ subroutine select_edge_bond(pah,atom1,atom2)
 ! #############################################################
     if (.not. selected) then
         atom2 = 0
-        outer: do i=1,pah%nat
+        outer: do i=1, pah%nat
             if (pah%neighbornumber(i) == 2) then
                 atom1 = i
                 atom2 = pah%neighborlist(i,1)
                 exit outer
             else if (pah%neighbornumber(i) == 3) then
-                atom1=i
-                do j=1,3
+                atom1 = i
+                do j=1, 3
                     atom2=pah%neighborlist(atom1,min(j,mod(j,3_kint)+1))
                     atom3=pah%neighborlist(atom1,max(j,mod(j,3_kint)+1))
                     call find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
