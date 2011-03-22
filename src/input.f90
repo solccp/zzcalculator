@@ -48,15 +48,6 @@ subroutine read_input(input_fname,pah)
     end do
     close(20)
 
-    ! ######################################
-    ! # verify the maximal number of atoms #
-    ! ######################################
-!    if (cnat > maxatoms) then
-!        write(*,*)"Error"
-!        write(*,*)"Recompile your code with larger value of the maxatoms in types_module.f90"
-!        write(*,*)"Minimal value of maxatoms you need is:",cnat
-!        stop
-!    end if
 
     ! ######################
     ! # allocate structure #

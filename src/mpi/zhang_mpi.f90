@@ -70,7 +70,11 @@ program zhang_polynomial
             end if
         end if
         if(okey == 'b') then
-            read(optarg, *) options%bondlistfile
+            read(optarg, '(a)') options%bondlistfile
+            if (image_id == 0) then
+                print *, 'Load bondlist file:', trim(options%bondlistfile)
+                call flush(6)
+            end if
             options%has_bondlistfile = .true.
         end if
         if(okey == '.') then

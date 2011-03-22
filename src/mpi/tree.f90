@@ -13,11 +13,13 @@ recursive subroutine clear_tree(pah)
     use types_module
     use structure_module
     type(structure), intent(inout) :: pah
-    logical :: ab, ac, ar
+    logical :: ab, ac, ar, as1, as2
 
     ab = associated(pah%child_bond)
     ac = associated(pah%child_corners)
     ar = associated(pah%child_ring)
+    as1 = associated(pah%child_son1)
+    as2 = associated(pah%child_son2)
 
     if ( ab .and. ac ) then
         call clear_tree(pah%child_bond)
@@ -40,6 +42,14 @@ recursive subroutine clear_tree(pah)
             deallocate(pah%child_ring)
             nullify(pah%child_ring)
         end if
+    else if ( as1 .and. as2 ) then
+                
+        call clear_tree(pah%child_son1)
+        call clear_tree(pah%child_son2)
+        call destory(pah%child_son1)
+        call destory(pah%child_son2)
+        nullify(pah%child_son1)
+        nullify(pah%child_son2)
     end if
 
     
@@ -48,11 +58,15 @@ recursive subroutine sum_up(pah)
     use types_module
     use structure_module
     type(structure), intent(inout) :: pah
-    logical :: ab, ac, ar
+    logical :: ab, ac, ar, as1, as2
 
     ab = associated(pah%child_bond)
     ac = associated(pah%child_corners)
     ar = associated(pah%child_ring)
+    as1 = associated(pah%child_son1)
+    as2 = associated(pah%child_son2)
+
+
 
     if ( ab .and. ac ) then
         call sum_up(pah%child_bond)
@@ -76,6 +90,17 @@ recursive subroutine sum_up(pah)
             deallocate(pah%child_ring)
             nullify(pah%child_ring)
         end if
+    else if ( as1 .and. as2 ) then
+        call sum_up(pah%child_son1)
+        call sum_up(pah%child_son2)
+        call multiply_polynomials(pah,pah%child_son1,pah%child_son2)
+        call destory(pah%child_son1)
+        call destory(pah%child_son2)
+        deallocate(pah%child_son1)
+        deallocate(pah%child_son2)
+
+        nullify(pah%child_son1)
+        nullify(pah%child_son2)
     end if
 
     
@@ -137,7 +162,7 @@ subroutine build_tree(pah, image_count, max_tree_size, pah_array, final_tree_siz
     counter1 = 1
     pah_array(1)%ptr => pah   
 
-    if ( image_count == 0 ) then
+    if ( image_count == 1 ) then
         final_tree_size = 1
         return
     end if
@@ -195,9 +220,28 @@ subroutine build_tree(pah, image_count, max_tree_size, pah_array, final_tree_siz
                         cur_node%child_ring => ring
                     end if
                 else
-!                print *, 'found a disconnected pah, skipping decompose.'
-                    counter2 = counter2 + 1
-                    t_pah_array(counter2)%ptr => cur_node
+!                    print *, 'found a disconnected pah, splitting into sons'
+                    allocate(bond)
+                    allocate(corners)
+                    call split_structure(cur_node, bond, corners, medat)
+                    if ( mod(bond%nat, 2_kint) == 1) then
+!                        print *, 'found invalid splitting to odd nats'
+                        call destory(bond)
+                        call destory(corners)
+                        deallocate(bond)
+                        deallocate(corners)
+                        cur_node%order = 0
+                        allocate(cur_node%polynomial(1))
+                        cur_node%polynomial(1)=setvli(0_kint)
+                    else
+!                        print *, 'found valid splitting to odd nats'
+                        counter2 = counter2 + 1
+                        t_pah_array(counter2)%ptr => bond
+                        cur_node%child_son1 => bond
+                        counter2 = counter2 + 1
+                        t_pah_array(counter2)%ptr => corners
+                        cur_node%child_son2 => corners
+                    end if
                 end if
             else
                 reach_limit = .true.

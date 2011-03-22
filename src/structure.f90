@@ -21,6 +21,8 @@ module structure_module
         type(structure), pointer :: child_corners => NULL()
         type(structure), pointer :: child_bond => NULL()
         type(structure), pointer :: child_ring => NULL()
+        type(structure), pointer :: child_son1 => NULL()
+        type(structure), pointer :: child_son2 => NULL()
 
 
     end type structure

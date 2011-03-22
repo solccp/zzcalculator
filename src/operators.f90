@@ -434,7 +434,68 @@ subroutine dfs(pah,nat,visit_list,lnat)
 end subroutine dfs
 !####################################################################################
 !############################# end of subroutine dfs ################################
+subroutine split_structure(pah, son1, son2, medat)
+!
+! split a disconnected polycyclic benzenoid structure pah into two substructures
+! * son1 which is connected and contains (medat-1) atoms
+! * son2 which can be connected or disconnected and contains (pah%nat-medat+1) atoms
+!
+! * note: only use for splitting purpose.
+!
 
+    use types_module
+    use structure_module
+    implicit none
+    
+    type(structure), intent(in) :: pah
+    type(structure), intent(inout) :: son1, son2
+    integer(kint), intent(in) :: medat
+
+    integer(kint) :: i,j
+
+! ###############################
+! # allocate the son structures #
+! ###############################
+    son1%nat=medat-1
+    son1%nbondlistentries=pah%nbondlistentries
+    allocate(son1%neighbornumber(son1%nat))
+    allocate(son1%neighborlist(son1%nat,3))
+    son2%nat=pah%nat-medat+1
+    son2%nbondlistentries=pah%nbondlistentries
+    allocate(son2%neighbornumber(son2%nat))
+    allocate(son2%neighborlist(son2%nat,3))
+    if (pah%nbondlistentries > 0) then 
+        allocate(son1%bondlist(2,son1%nbondlistentries))
+        allocate(son2%bondlist(2,son2%nbondlistentries))
+        son1%bondlist=pah%bondlist
+        son2%bondlist=pah%bondlist
+    end if
+
+
+! #################################
+! # initialize the son structures #
+! #################################
+    son1%neighbornumber=pah%neighbornumber(1:medat-1)
+    son1%neighborlist=pah%neighborlist(1:medat-1,1:3)
+    son2%neighbornumber=pah%neighbornumber(medat:pah%nat)
+    son2%neighborlist=pah%neighborlist(medat:pah%nat,1:3)
+    forall (i=1:son2%nat, j=1:3, son2%neighborlist(i,j) /= 0)
+        son2%neighborlist(i,j)=son2%neighborlist(i,j)-son1%nat
+    end forall
+    forall (i=1:son1%nbondlistentries, j=1:2, son1%bondlist(j,i) > son1%nat)
+        son1%bondlist(j,i)=0
+    end forall
+    forall (i=1:son2%nbondlistentries, j=1:2, son2%bondlist(j,i) <= son1%nat)
+        son2%bondlist(j,i)=0
+    end forall
+    forall (i=1:son2%nbondlistentries, j=1:2, son2%bondlist(j,i) /= 0)
+        son2%bondlist(j,i)=son2%bondlist(j,i)-son1%nat
+    end forall
+
+    call clean_bond_list(son1)
+    call clean_bond_list(son2)
+    
+end subroutine
 
 !###################### subroutine split_and_decompose ##############################
 !####################################################################################
