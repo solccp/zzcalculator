@@ -32,9 +32,10 @@ subroutine create_nobond_daughter(pah,bond,atom1,atom2)
     bond%neighborlist = 0
  
 
+    allocate(bond%indexmapping(bond%nat))
+    bond%indexmapping = pah%indexmapping
+
     if (options%print_intermediate_structures) then
-        allocate(bond%indexmapping(bond%nat))
-        bond%indexmapping = pah%indexmapping
 
         allocate(bond%doublebondlist(2,size(pah%doublebondlist,2))) 
         allocate(bond%ringlist(6,size(pah%ringlist,2))) 
@@ -128,10 +129,10 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     pah1%neighbornumber = 0
     pah1%neighborlist = 0
 
+    allocate(pah1%indexmapping(pah%nat))
+    pah1%indexmapping = pah%indexmapping
 
     if (options%print_intermediate_structures) then
-        allocate(pah1%indexmapping(pah%nat))
-        pah1%indexmapping = pah%indexmapping
         allocate(pah1%doublebondlist(2,size(pah%doublebondlist,2))) 
         allocate(pah1%ringlist(6,size(pah%ringlist,2))) 
         pah1%doublebondnumber = pah%doublebondnumber
@@ -188,13 +189,14 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
             pah1%neighbornumber(int_1darray_1(i)) = k
         end if
     end do
-    if (options%print_intermediate_structures) then
+
+!    if (options%print_intermediate_structures) then
         do i=1,pah%nat
             if (int_1darray_1(i) /= 0) then 
                 pah1%indexmapping(int_1darray_1(i)) = pah%indexmapping(i)
             end if
         end do
-    end if
+!    end if
         
 
 ! #######################################

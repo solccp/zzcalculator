@@ -58,12 +58,12 @@ subroutine read_input(input_fname,pah)
     allocate(pah%neighborlist(pah%nat,3))
     pah%neighbornumber=0
 
-    if (options%print_intermediate_structures) then
-        allocate(pah%indexmapping(pah%nat))
-        do i=1, pah%nat
-            pah%indexmapping(i) = rmap(i)
-        end do
+    allocate(pah%indexmapping(pah%nat))
+    do i=1, pah%nat
+        pah%indexmapping(i) = rmap(i)
+    end do
 
+    if (options%print_intermediate_structures) then
         pah%doublebondnumber = 0
         allocate(pah%doublebondlist(2,pah%nat))
         pah%ringnumber = 0

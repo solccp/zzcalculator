@@ -97,9 +97,9 @@ subroutine cut_dangling_bonds(pah)
                 pah%doublebondnumber = pah%doublebondnumber + 1
                 pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
                 pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
-                pah%indexmapping(atom1) = pah%indexmapping(r1)
-                pah%indexmapping(atom2) = pah%indexmapping(r2)
             endif
+            pah%indexmapping(atom1) = pah%indexmapping(r1)
+            pah%indexmapping(atom2) = pah%indexmapping(r2)
 
             call remove_atom(pah, atom1, r1)
             call remove_atom(pah, atom2, r2)
@@ -346,9 +346,9 @@ subroutine check_if_connected(pah,medat)
         if ( i >= j ) then
             exit
         end if
-        if (options%print_intermediate_structures) then
+!        if (options%print_intermediate_structures) then
             call swap_int(pah%indexmapping(i), pah%indexmapping(j))
-        end if
+!        end if
         call swap_int(pah%neighbornumber(i), pah%neighbornumber(j))
         do k = 1, 3
             call swap_int(pah%neighborlist(i,k), pah%neighborlist(j,k))
@@ -471,6 +471,13 @@ subroutine split_structure(pah, son1, son2, medat)
         son2%bondlist=pah%bondlist
     end if
 
+    ! ########################
+    ! # update index mapping #
+    ! ########################
+    allocate(son1%indexmapping(son1%nat))
+    son1%indexmapping = pah%indexmapping(1:medat-1)
+    allocate(son2%indexmapping(son2%nat))
+    son2%indexmapping = pah%indexmapping(medat:)
 
 ! #################################
 ! # initialize the son structures #
@@ -538,14 +545,14 @@ subroutine split_and_decompose(pah,medat,level)
         son2%bondlist=pah%bondlist
     end if
 
-    if (options%print_intermediate_structures) then
     ! ########################
     ! # update index mapping #
     ! ########################
-        allocate(son1%indexmapping(son1%nat))
-        son1%indexmapping = pah%indexmapping(1:medat-1)
-        allocate(son2%indexmapping(son2%nat))
-        son2%indexmapping = pah%indexmapping(medat:)
+    allocate(son1%indexmapping(son1%nat))
+    son1%indexmapping = pah%indexmapping(1:medat-1)
+    allocate(son2%indexmapping(son2%nat))
+    son2%indexmapping = pah%indexmapping(medat:)
+    if (options%print_intermediate_structures) then
 
     !##########################################
     !# allocate storage for connection output #
@@ -672,6 +679,7 @@ subroutine select_edge_bond(pah,atom1,atom2)
             selected=.true.
             exit outer1
         end if
+        if (pah%neighbornumber(atom1) == 3 .and. pah%neighbornumber(atom2) == 3 ) cycle
         do  j=1,pah%neighbornumber(atom1)
             if (pah%neighborlist(atom1,j) == atom2) cycle
             atom3=pah%neighborlist(atom1,j)
@@ -697,6 +705,9 @@ subroutine select_edge_bond(pah,atom1,atom2)
                 atom1 = i
                 do j=1, 3
                     atom2=pah%neighborlist(atom1,min(j,mod(j,3_kint)+1))
+                    if ( pah%neighbornumber(atom2) == 3 ) then
+                        cycle
+                    end if
                     atom3=pah%neighborlist(atom1,max(j,mod(j,3_kint)+1))
                     call find_aromatic_sextet(pah,sextet,atom1,atom2,atom3,ring_exists)
                     if (.not. ring_exists) then

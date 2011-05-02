@@ -16,15 +16,24 @@ program zhang_polynomial
     use getopt_m
     use output
     use temp_space
+    use database_m
+    use tree
 
     implicit none
     integer(kint) :: i, level
-    type(structure) :: pah
+    type(structure), target :: pah
 
-
+!========================================
     integer(kint) :: argc
     character(len=80) :: input_fname
     character :: okey
+!========================================
+    
+    type(tree_node), pointer :: root
+    integer, parameter :: max_tree_size = 3000
+    logical :: reach_limit
+    type(database_entry), pointer :: head
+!=======================================
 
     argc = command_argument_count()
 
@@ -69,8 +78,33 @@ program zhang_polynomial
     call initialize_temp_space(pah%nat)
     
     level = 0
-    call find_ZZ_polynomial(pah, level)
-    
+
+    allocate(root)
+    root%pah => pah
+
+    call set_max_size(maxval(pah%indexmapping))
+
+    call build_tree(root, max_tree_size, reach_limit)
+ 
+!    print *, reach_limit
+!    print *, 'database size ', database_size
+
+    head => database_head
+
+    do while(associated(head))
+        if (.not. head%node%hasChild) then
+            call find_ZZ_polynomial(head%node%pah, level)
+!            write(*, '(a,i3)') char(head%key), head%hits
+        else
+!            print *, 'hasChild, skipped'
+        end if
+        head => head%next
+    end do
+
+!    call visit_tree(root)
+!    print *, 'it looks ok'
+    call sum_up(root)
+
     ! ###########################
     ! # print the ZZ polynomial #
     ! ###########################

@@ -1,5 +1,6 @@
 module structure_module
     
+    use iso_varying_string
     use types_module
     type, public :: structure
         integer(kint) :: nat
@@ -17,21 +18,23 @@ module structure_module
         integer(kint), allocatable, dimension(:,:) :: ringlist
         logical :: hasDisconnectedParent
         integer :: storage_unit
-
-        type(structure), pointer :: child_corners => NULL()
-        type(structure), pointer :: child_bond => NULL()
-        type(structure), pointer :: child_ring => NULL()
-        type(structure), pointer :: child_son1 => NULL()
-        type(structure), pointer :: child_son2 => NULL()
-
-
     end type structure
 
-    type ::  pah_ptr
-        type(structure), pointer :: ptr
+    type ::  tree_node
+        type(varying_string) :: key
+        logical :: hasChild = .false.
+        type(structure), pointer :: pah => NULL()
+        
+        type(tree_node), pointer :: child_corners => NULL()
+        type(tree_node), pointer :: child_bond => NULL()   
+        type(tree_node), pointer :: child_ring => NULL()   
+        type(tree_node), pointer :: child_son1 => NULL()   
+        type(tree_node), pointer :: child_son2 => NULL()   
     end type
 
-
+    type :: tree_node_ptr
+        type(tree_node), pointer :: node
+    end type
 contains 
     subroutine destory(pah)
         use options_m

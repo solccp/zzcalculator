@@ -18,16 +18,17 @@ subroutine print_ZZ_polynomial(pah)
 ! #########################
 ! # initialize the string #
 ! #########################
-    finalZZpolynomial=''
-    cpos=1
+    finalZZpolynomial = ''
+    cpos = 1
+    total = pah%polynomial(1)
     call print_vli_in_string(cpos,finalZZpolynomial,pah%polynomial(1))
     if (pah%order > 0) then
         write(finalZZpolynomial(cpos:),*)'+ '
-        cpos=cpos+3
+        cpos = cpos+3
         call print_vli_in_string(cpos,finalZZpolynomial,pah%polynomial(2))
         write(finalZZpolynomial(cpos:),*)'x'
-        cpos=cpos+2
-        total=addvli(pah%polynomial(1),pah%polynomial(2))
+        cpos = cpos+2
+        total = addvli(pah%polynomial(1),pah%polynomial(2))
     end if
     if (pah%order <= 1) then
         write(*,*)finalZZpolynomial(1:cpos-1)
