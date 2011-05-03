@@ -44,7 +44,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pl:b:')
+        okey = getopt('Pfl:b:')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -54,6 +54,10 @@ program zhang_polynomial
         if(okey == 'P') then
             options%print_intermediate_structures = .true.
         end if
+        if(okey == 'f') then
+            options%force_print_structures = .true.
+        end if
+
         if(okey == 'l') then
             read(optarg, *) options%print_order
             if (options%print_order < 0) then 
@@ -74,42 +78,46 @@ program zhang_polynomial
     ! # read initial geometry data and create topological matrix #
     ! ############################################################
     call read_input(input_fname, pah)
+    if ( options%print_intermediate_structures .and. pah%nat > 50 .and. .not. options%force_print_structures ) then
+        print *, 'warning: # of atoms > 50, disabling intermediate structure printing'
+        print *, '  use -P -f option to print the intermediate structures forcely'
+        options%print_intermediate_structures = .false.
+    end if
+
 
     call initialize_temp_space(pah%nat)
     
     level = 0
 
-    allocate(root)
-    root%pah => pah
+    if ( .not. options%print_intermediate_structures ) then
+        allocate(root)
+        root%pah => pah
 
-    call set_max_size(maxval(pah%indexmapping))
+        call set_max_size(maxval(pah%indexmapping))
 
-    call build_tree(root, max_tree_size, reach_limit)
+        call build_tree(root, max_tree_size, reach_limit)
  
-!    print *, reach_limit
-!    print *, 'database size ', database_size
+        head => database_head
 
-    head => database_head
+        do while(associated(head))
+            if (.not. head%node%hasChild) then
+                call find_ZZ_polynomial(head%node%pah, level)
+!                write(*, '(a,i3)') char(head%key), head%hits
+            end if
+            head => head%next
+        end do
 
-    do while(associated(head))
-        if (.not. head%node%hasChild) then
-            call find_ZZ_polynomial(head%node%pah, level)
-!            write(*, '(a,i3)') char(head%key), head%hits
-        else
-!            print *, 'hasChild, skipped'
-        end if
-        head => head%next
-    end do
-
-!    call visit_tree(root)
-!    print *, 'it looks ok'
-    call sum_up(root)
+        call sum_up(root)
 
     ! ###########################
     ! # print the ZZ polynomial #
     ! ###########################
-    call print_ZZ_polynomial(pah)
-    call close_file()
+        call print_ZZ_polynomial(pah)
+    else
+        call find_ZZ_polynomial(pah, level)
+        call print_ZZ_polynomial(pah)
+        call close_file()
+    end if
 
     ! #############################################################
     ! # find recursively the ZZ polynomial of the given structure #

@@ -1,7 +1,7 @@
 
 
 if (TEST_IMSTR)
-    execute_process(COMMAND ${TEST_PROG} -P ${SOURCEDIR}/${TEST_NAME}.in TIMEOUT 120 RESULT_VARIABLE HAD_ERROR OUTPUT_FILE output.txt ERROR_FILE error.txt) 
+    execute_process(COMMAND ${TEST_PROG} -P -f ${SOURCEDIR}/${TEST_NAME}.in TIMEOUT 120 RESULT_VARIABLE HAD_ERROR OUTPUT_FILE output.txt ERROR_FILE error.txt) 
 else ()
     execute_process(COMMAND ${TEST_PROG} ${SOURCEDIR}/${TEST_NAME}.in TIMEOUT 120 RESULT_VARIABLE HAD_ERROR OUTPUT_FILE output.txt ERROR_FILE error.txt) 
 endif()

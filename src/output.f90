@@ -6,7 +6,9 @@ module output
 
 contains
     subroutine close_file()
-        close(output_unit) 
+        if ( output_unit /= -1 ) then
+            close(output_unit) 
+        end if
     end subroutine
     subroutine open_file()
         output_unit = getunit()
