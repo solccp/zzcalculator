@@ -8,7 +8,7 @@ file(GLOB  ZZ_polynomial_SOURCES *.f90)
 
 if(USE_MPI STREQUAL ON)
     #source_group("special" FILES mpi/*.f90)
-    LIST(APPEND ZZ_polynomial_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/mpi/zhang_mpi.f90 ${CMAKE_CURRENT_SOURCE_DIR}/mpi/mpi_global.f90)
+    LIST(APPEND ZZ_polynomial_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/mpi/zhang.f90 ${CMAKE_CURRENT_SOURCE_DIR}/mpi/mpi_global.f90)
     message("Build ZZ_polynomial with MPI support.")
 else()
     #source_group("special" FILES non_mpi/*.f90)

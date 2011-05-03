@@ -11,7 +11,7 @@ contains
 recursive subroutine clear_tree(pah_node)
     use types_module
     use structure_module
-    type(tree_node), intent(inout) :: pah_node
+    type(tree_node), intent(inout), pointer :: pah_node
     logical :: ab, ac, ar, as1, as2
 
     ab = associated(pah_node%child_bond)
@@ -20,13 +20,16 @@ recursive subroutine clear_tree(pah_node)
     as1 = associated(pah_node%child_son1)
     as2 = associated(pah_node%child_son2)
 
-    if ( ab .and. ac ) then
-        call clear_tree(pah_node%child_bond)
-        call clear_tree(pah_node%child_corners)
+    if ( ab .or. ac .or. ar ) then
+        if ( ab ) then
+            call clear_tree(pah_node%child_bond)
+        end if
+        if ( ac ) then
+            call clear_tree(pah_node%child_corners)
+        end if
         if (ar) then
             call clear_tree(pah_node%child_ring)
         end if
-
         call destory(pah_node%child_bond%pah)
         call destory(pah_node%child_corners%pah)
 
@@ -45,8 +48,7 @@ recursive subroutine clear_tree(pah_node)
             deallocate(pah_node%child_ring)
             nullify(pah_node%child_ring)
         end if
-    else if ( as1 .and. as2 ) then
-                
+    else if ( as1 .or. as2 ) then               
         call clear_tree(pah_node%child_son1)
         call clear_tree(pah_node%child_son2)
         call destory(pah_node%child_son1%pah)
@@ -80,31 +82,16 @@ recursive subroutine sum_up(pah_node)
     if ( ab .or. ac .or. ar ) then
         if ( ab ) then
             call sum_up(pah_node%child_bond)
-!            print *, 'child_bond poly:'
-!            call print_ZZ_polynomial(pah_node%child_bond%pah)
         end if
         if ( ac ) then
             call sum_up(pah_node%child_corners)
-!            print *, 'child_corners poly:'
-!            call print_ZZ_polynomial(pah_node%child_corners%pah)
         end if
         if ( ar ) then
             call sum_up(pah_node%child_ring)
-!            print *, 'child_ring poly:'
-!            call print_ZZ_polynomial(pah_node%child_ring%pah)
-        end if
-!        print *, 'before sum'
-!            call print_ZZ_polynomial(pah_node%child_bond%pah)
-!            call print_ZZ_polynomial(pah_node%child_corners%pah)
-!            call print_ZZ_polynomial(pah_node%child_ring%pah)
-        if (ar) then
             call sum_polynomials(pah_node%pah,pah_node%child_bond%pah,pah_node%child_corners%pah,pah_node%child_ring%pah, .true.)
         else
             call sum_polynomials(pah_node%pah,pah_node%child_bond%pah,pah_node%child_corners%pah,pah_node%child_corners%pah, .false.)
         end if
-!        print *, 'summed poly:'
-!        call print_ZZ_polynomial(pah_node%pah)
-
         nullify(pah_node%child_bond)
         nullify(pah_node%child_corners)
         if ( ar ) then
@@ -113,18 +100,11 @@ recursive subroutine sum_up(pah_node)
     else if ( as1 .or. as2 ) then
         if ( as1 ) then
             call sum_up(pah_node%child_son1)
-!            print *, 'child_son1 poly:'
-!            call print_ZZ_polynomial(pah_node%child_son1%pah)
         end if
         if ( as2 ) then
             call sum_up(pah_node%child_son2)
-!            print *, 'child_son2 poly:'
-!            call print_ZZ_polynomial(pah_node%child_son2%pah)
         end if
-!        print *, 'before mul'
         call multiply_polynomials(pah_node%pah,pah_node%child_son1%pah,pah_node%child_son2%pah)
-!        print *, 'multied poly:'
-!        call print_ZZ_polynomial(pah_node%pah)
         nullify(pah_node%child_son1)
         nullify(pah_node%child_son2)
     end if
@@ -271,6 +251,7 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
         else
             call check_if_connected(cur_node%pah,medat)
             cur_node%hasChild = .true.
+            database_size = database_size -1
             if ( medat == 0 ) then
 
                 call select_edge_bond(cur_node%pah,atom1,atom2)
@@ -356,7 +337,7 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                 end if
             end if
         end if
-        if ( database_size > 2000 ) then
+        if ( database_size >= max_tree_size ) then
             reach_limit = .true.
         end if
         if ( cur_node%pah%nat < min_limit_nat )  then

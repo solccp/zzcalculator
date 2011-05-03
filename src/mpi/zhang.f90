@@ -18,6 +18,8 @@ program zhang_polynomial
     use temp_space
     use database_m
     use tree
+    use mpi
+    use mpi_global
 
     implicit none
     integer(kint) :: i, level
@@ -30,11 +32,20 @@ program zhang_polynomial
 !========================================
     
     type(tree_node), pointer :: root
-    integer, parameter :: max_tree_size = 5000
+    integer, parameter :: max_tree_size = 3000
     logical :: reach_limit
     type(database_entry), pointer :: head
-    integer :: total_required_strs
 !=======================================
+! MPI specific 
+    type(tree_node_ptr), dimension(:), allocatable :: pah_array
+    integer :: local_pah_count, local_ext_count, local_rank, local_calc_count
+    integer, dimension(:), allocatable :: local_index
+    integer :: error, free_node, final_size
+    integer :: j
+
+!=======================================
+    call MPI_Init ( error )
+    call mpi_global_init()
 
     argc = command_argument_count()
 
@@ -67,13 +78,21 @@ program zhang_polynomial
         end if
         if(okey == 'b') then
             read(optarg, '(a)') options%bondlistfile
-            print *, 'bondlist file: ', trim(options%bondlistfile)
+            print *, 'Load bondlist file:', trim(options%bondlistfile)
             options%has_bondlistfile = .true.
         end if
         if(okey == '.') then
             input_fname = optarg
         end if
     end do
+
+    if (options%print_intermediate_structures .and. image_count>1) then
+        if (image_id == 0) then
+            print*, 'running with MPI doesn''t support intermediate structure output'
+        end if
+        call MPI_Finalize ( error )
+        stop
+    end if
 
 
     ! ############################################################
@@ -95,44 +114,83 @@ program zhang_polynomial
         allocate(root)
         root%pah => pah
 
-        call set_max_size(maxval(pah%indexmapping))
+        call set_max_size(int(maxval(pah%indexmapping)))
 
         call build_tree(root, max_tree_size, reach_limit)
  
-        print *, 'database size ', database_size
-        total_required_strs = 0
+        final_size = 0
         head => database_head
         do while(associated(head))
             if (.not. head%node%hasChild) then
-                total_required_strs = total_required_strs + 1
-                print *, head%hits, head%node%pah%nat
+                final_size = final_size + 1
             end if
             head => head%next
         end do
-        print *, 'required_strs ', total_required_strs
-        
+      
+        allocate(pah_array(final_size)) 
+        allocate(local_index(final_size)) 
+
 
         head => database_head
         i = 0
         do while(associated(head))
             if (.not. head%node%hasChild) then
                 i = i + 1
-                print *, 'running (', i, '/' , total_required_strs , ')...'
-                call find_ZZ_polynomial(head%node%pah, level)
+                pah_array(i)%node => head%node
+
+!                print *, 'running (', i, '/' , total_required_strs , ')...'
+!                call find_ZZ_polynomial(head%node%pah, level)
                 
 !                write(*, '(a,i3)') char(head%key), head%hits
             end if
             head => head%next
         end do
 
-        call sum_up(root)
+        
+        local_pah_count = final_size / image_count
+        local_ext_count = mod(final_size, image_count)
+        local_rank = image_count - image_id
+        local_calc_count = local_pah_count
+        
+        if ( local_ext_count > 0 .and. (local_rank <= local_ext_count) ) then   
+            local_calc_count = local_calc_count + 1
+        end if
 
 
-    ! ###########################
-    ! # print the ZZ polynomial #
-    ! ###########################
-        call print_ZZ_polynomial(pah)
-        call clear_tree(root)
+        local_index = 0
+        j = local_rank
+        do i= 1, local_calc_count
+            local_index(i) = j
+            j = j + image_count
+        end do
+
+!    print *, image_id, local_index(:local_calc_count)
+
+        do i = 1, local_calc_count
+!            write(*, '(i0, a, i0, a, i0)'), image_id, ' running ', i, ' of ' , local_calc_count
+            call find_ZZ_polynomial(pah_array(local_index(i))%node%pah, level)
+        end do
+
+!        print *, image_id, 'local jobs finished'
+
+        
+        if ( image_id == 0 ) then
+            do j = 1, image_count-1
+                call recv_polynomial(pah_array, j)
+            end do
+            call sum_up(root)
+            ! ###########################
+            ! # print the ZZ polynomial #
+            ! ###########################
+            call print_ZZ_polynomial(pah)
+            call close_file()
+!            call clear_tree(root)
+        else
+            call send_polynomial(pah_array, local_index, local_calc_count)
+!            call clear_tree(root)
+        end if
+        deallocate(pah_array) 
+        deallocate(local_index)
     else
         call find_ZZ_polynomial(pah, level)
         call print_ZZ_polynomial(pah)
@@ -145,6 +203,8 @@ program zhang_polynomial
 
 
     call finalize_temp_space()
+    call mpi_global_finalize()
+    call MPI_Finalize ( error )
 
 
 end

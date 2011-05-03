@@ -2,7 +2,7 @@ module getopt_m
     implicit none
     public
     save
-    character(len=80) :: optarg
+    character(len=500) :: optarg
     integer :: optind = 1
 
     integer, private :: optstr_ind
@@ -11,7 +11,7 @@ contains
         character(len=*), intent(in) :: optstr
 
         integer :: argc
-        character(len=80) :: arg
+        character(len=500) :: arg
         character :: okey
         integer :: found
         integer :: optstr_len
