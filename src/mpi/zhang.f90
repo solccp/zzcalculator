@@ -32,7 +32,7 @@ program zhang_polynomial
 !========================================
     
     type(tree_node), pointer :: root
-    integer, parameter :: max_tree_size = 3000
+    integer :: max_tree_size
     logical :: reach_limit
     type(database_entry), pointer :: head
 !=======================================
@@ -43,9 +43,12 @@ program zhang_polynomial
     integer :: error, free_node, final_size
     integer :: j
 
+    integer, dimension(:) ,allocatable :: dis
 !=======================================
     call MPI_Init ( error )
     call mpi_global_init()
+
+    max_tree_size = 5000
 
     argc = command_argument_count()
 
@@ -56,13 +59,15 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:')
+        okey = getopt('Pfl:b:d:')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
             stop
         end if
-        
+        if(okey == 'd') then
+            read(optarg, *) max_tree_size
+        end if
         if(okey == 'P') then
             options%print_intermediate_structures = .true.
         end if
@@ -142,10 +147,30 @@ program zhang_polynomial
 !                call find_ZZ_polynomial(head%node%pah, level)
                 
 !                write(*, '(a,i3)') char(head%key), head%hits
+!                write(*, '(i5,i3)') head%node%pah%nat, head%hits
             end if
             head => head%next
         end do
+!        stop
+!        print *, pah_array(1)%node%pah%nat, pah_array(final_size)%node%pah%nat
 
+!        allocate(dis(pah_array(1)%node%pah%nat))
+!        dis = 0
+!        head => database_head
+!        do while(associated(head))
+!            if (.not. head%node%hasChild) then
+!                dis(head%node%pah%nat) = dis(head%node%pah%nat) + head%hits
+!            end if
+!            head => head%next
+!        end do
+
+!        do i=1, pah_array(1)%node%pah%nat
+!            if ( dis(i) == 0 ) cycle
+!            if (mod(i,2) == 1 ) cycle
+!            print *, i, dis(i)
+!        end do   
+     
+!        stop
         
         local_pah_count = final_size / image_count
         local_ext_count = mod(final_size, image_count)
@@ -166,8 +191,8 @@ program zhang_polynomial
 
 !    print *, image_id, local_index(:local_calc_count)
 
-        do i = 1, local_calc_count
-!            write(*, '(i0, a, i0, a, i0)'), image_id, ' running ', i, ' of ' , local_calc_count
+        do i = local_calc_count, 1, -1
+!            write(*, '(i0, a, i0, a, i0, a, i0)'), image_id, ' running ', i, ' of ' , local_calc_count, 'nat :', pah_array(local_index(i))%node%pah%nat
             call find_ZZ_polynomial(pah_array(local_index(i))%node%pah, level)
         end do
 
