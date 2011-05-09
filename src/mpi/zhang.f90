@@ -142,15 +142,22 @@ program zhang_polynomial
             if (.not. head%node%hasChild) then
                 i = i + 1
                 pah_array(i)%node => head%node
+                
+!                write(optarg, '(i0,a)') i, '.xyz'
+!                print *, trim(optarg)
+!                call write_xyz(head%node%pah, optarg)
 
 !                print *, 'running (', i, '/' , total_required_strs , ')...'
 !                call find_ZZ_polynomial(head%node%pah, level)
                 
-!                write(*, '(a,i3)') char(head%key), head%hits
+                write(*, '(a,i3,i5)') char(head%key), head%hits, head%node%pah%nat
 !                write(*, '(i5,i3)') head%node%pah%nat, head%hits
             end if
             head => head%next
         end do
+
+!        stop
+
 !        stop
 !        print *, pah_array(1)%node%pah%nat, pah_array(final_size)%node%pah%nat
 

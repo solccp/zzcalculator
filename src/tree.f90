@@ -242,6 +242,8 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
             exit
         end if
 
+
+
         if ( cur_node%hasChild ) then
             print *, 'some logic error'
         end if
@@ -265,6 +267,8 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
 
                 if ( bond%pah%nat == 0 ) then
                     call set_polynomial(bond%pah, 1_kint)
+                else if ( bond%pah%nat < 6 ) then
+                    call set_polynomial(bond%pah, 0_kint)
                 else
                     call add_database_entry(bond, hit)
                 end if
@@ -281,6 +285,8 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                     
                 if ( corners%pah%nat == 0 ) then
                     call set_polynomial(corners%pah, 1_kint)
+                else if ( corners%pah%nat < 6 ) then
+                    call set_polynomial(corners%pah, 0_kint)
                 else
                     call add_database_entry(corners, hit)
                 end if
@@ -297,6 +303,8 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                     
                     if ( ring%pah%nat == 0 ) then
                         call set_polynomial(ring%pah, 1_kint)
+                    else if ( ring%pah%nat < 6 ) then
+                        call set_polynomial(ring%pah, 0_kint)
                     else
                         call add_database_entry(ring, hit)
                     end if

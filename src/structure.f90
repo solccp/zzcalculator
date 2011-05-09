@@ -35,6 +35,11 @@ module structure_module
     type :: tree_node_ptr
         type(tree_node), pointer :: node
     end type
+
+    save
+    real(kreal),allocatable,dimension(:,:) :: geom
+    
+
 contains 
     subroutine destory(pah)
         use options_m

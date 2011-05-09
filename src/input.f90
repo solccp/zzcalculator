@@ -19,7 +19,7 @@ subroutine read_input(input_fname,pah)
     character(len=2) :: atname
     real(kreal),parameter :: ccdist=1.7d0
     real(kreal) :: inertia(3,3),eival(3),work(100)
-    real(kreal),allocatable,dimension(:,:) :: geom
+!    real(kreal),allocatable,dimension(:,:) :: geom
     integer(kint),allocatable,dimension(:) :: map
     integer(kint),allocatable,dimension(:) :: rmap
     real(kreal),dimension(3) :: x

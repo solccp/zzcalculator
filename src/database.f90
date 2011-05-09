@@ -56,6 +56,7 @@ subroutine add_database_entry(node, hit)
     str_key = ch_key
 !==========================================
 
+
     hit = .false.
 
     if ( .not. associated(database_head) ) then
@@ -70,14 +71,16 @@ subroutine add_database_entry(node, hit)
     else
         head => database_head   
         do while(associated(head%next))
-            if ( str_key == head%key ) then
-                hit = .true.
-                head%hits = head%hits + 1
-                call destory(node%pah)
-                deallocate(node%pah)
-                deallocate(node)
-                node => head%node
-                return
+            if ( head%node%pah%nat == node%pah%nat) then
+                if ( str_key == head%key ) then
+                    hit = .true.
+                    head%hits = head%hits + 1
+                    call destory(node%pah)
+                    deallocate(node%pah)
+                    deallocate(node)
+                    node => head%node
+                    return
+                end if
             end if
             if ( head%next%node%pah%nat < node%pah%nat ) then
                 allocate(new_entry)
@@ -92,7 +95,14 @@ subroutine add_database_entry(node, hit)
             end if
             head => head%next
         end do
-        if ( str_key /= head%key ) then
+        if ( (head%node%pah%nat == node%pah%nat) .and. ( str_key == head%key ) ) then
+                hit = .true.
+                head%hits = head%hits + 1
+                call destory(node%pah)
+                deallocate(node%pah)
+                deallocate(node)
+                node => head%node
+        else
             allocate(new_entry)
             new_entry%hits = 1
             new_entry%key = str_key
@@ -100,13 +110,6 @@ subroutine add_database_entry(node, hit)
             new_entry%node%key = str_key
             head%next => new_entry
             database_size = database_size + 1
-        else
-            hit = .true.
-            head%hits = head%hits + 1
-            call destory(node%pah)
-            deallocate(node%pah)
-            deallocate(node)
-            node => head%node
         end if
         return
     end if 

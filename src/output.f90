@@ -170,4 +170,29 @@ contains
 
     end subroutine
 
+    subroutine write_xyz(pah, filename)
+        use types_module
+        use structure_module
+        type(structure), intent(in) :: pah
+        character(len=*), intent(in) :: filename
+        integer :: i
+
+
+
+        open(unit=99, file=trim(filename))
+        write(99, '(i0)') pah%nat
+        write(99, *) ''
+        do i=1, pah%nat
+            write(99, '(a, 3(2x, F12.6))') 'C', geom(:,pah%indexmapping(i))
+        end do
+
+        
+        close(99) 
+            
+
+
+    end subroutine
+
+
+
 end module
