@@ -1,5 +1,5 @@
 # Project name is not mandatory, but you should use it
-project(ZZ_polynomial Fortran)
+project(ZZ_polynomial Fortran CXX)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -23,6 +23,7 @@ macro_ensure_out_of_source_build("${PROJECT_NAME} requires an out of source buil
 
 
 add_subdirectory(src)
+SET_TARGET_PROPERTIES(ZZ_polynomial PROPERTIES LINKER_LANGUAGE Fortran)
 
 enable_testing()
 add_subdirectory(test)

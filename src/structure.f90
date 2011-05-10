@@ -11,6 +11,9 @@ module structure_module
         integer(kint), allocatable,dimension(:,:) :: bondlist
         integer(kint) :: nbondlistentries
 
+        character(len=32) :: hash_key
+
+
         integer(kint),allocatable,dimension(:) :: indexmapping
         integer(kint) :: doublebondnumber
         integer(kint), allocatable, dimension(:,:) :: doublebondlist

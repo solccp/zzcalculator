@@ -36,6 +36,8 @@ program zhang_polynomial
     integer :: total_required_strs
 !=======================================
 
+!=======================================
+
     argc = command_argument_count()
 
     if (argc < 1) then
@@ -80,6 +82,7 @@ program zhang_polynomial
     ! # read initial geometry data and create topological matrix #
     ! ############################################################
     call read_input(input_fname, pah)
+
     if ( options%print_intermediate_structures .and. pah%nat > 50 .and. .not. options%force_print_structures ) then
         print *, 'warning: # of atoms > 50, disabling intermediate structure printing'
         print *, '  use -P -f option to print the intermediate structures forcely'
@@ -91,7 +94,7 @@ program zhang_polynomial
     
     level = 0
 
-    if ( .not. options%print_intermediate_structures ) then
+    if (.false.) then ! ( .not. options%print_intermediate_structures ) then
         allocate(root)
         root%pah => pah
 

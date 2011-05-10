@@ -8,11 +8,17 @@ subroutine find_ZZ_polynomial(pah,level)
     use structure_module
     use output
     use options_m
+    use hash_m
+
     implicit none
     type(structure), intent(inout) :: pah
     integer(kint), intent(in) :: level
 
     integer(kint) :: medat
+
+    if ( pah%nat >= 6 ) then
+        call get_hash(pah, pah%hash_key)
+    end if
 
 ! ###########################
 ! # if pah contains 0 atoms #
