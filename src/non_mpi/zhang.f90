@@ -18,6 +18,7 @@ program zhang_polynomial
     use temp_space
     use database_m
     use tree
+    use hash_m
 
     implicit none
     integer(kint) :: i, level
@@ -47,7 +48,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:')
+        okey = getopt('Pfl:b:d')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -75,6 +76,9 @@ program zhang_polynomial
         if(okey == '.') then
             input_fname = optarg
         end if
+        if(okey == 'd') then
+            call load_database_from_file()
+        end if
     end do
 
 
@@ -82,6 +86,8 @@ program zhang_polynomial
     ! # read initial geometry data and create topological matrix #
     ! ############################################################
     call read_input(input_fname, pah)
+
+
 
     if ( options%print_intermediate_structures .and. pah%nat > 50 .and. .not. options%force_print_structures ) then
         print *, 'warning: # of atoms > 50, disabling intermediate structure printing'
@@ -98,7 +104,7 @@ program zhang_polynomial
         allocate(root)
         root%pah => pah
 
-        call set_max_size(maxval(pah%indexmapping))
+        call set_max_size(int(maxval(pah%indexmapping)))
 
         call build_tree(root, max_tree_size, reach_limit)
  
@@ -146,6 +152,11 @@ program zhang_polynomial
     ! # find recursively the ZZ polynomial of the given structure #
     ! #############################################################
 
+
+!    call print_all_database_entry()
+    call save_database_to_file()
+    print *, 'db hit: ', stat_hit
+    print *, 'db no_hit: ', stat_no_hit
 
     call finalize_temp_space()
 

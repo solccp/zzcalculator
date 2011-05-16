@@ -36,9 +36,10 @@ if( CMAKE_Fortran_COMPILER_ID STREQUAL Intel )
     endif (CMAKE_BUILD_TYPE STREQUAL Debug)
     
     if (CMAKE_BUILD_TYPE STREQUAL Release)
-        set_target_properties(ZZ_polynomial PROPERTIES Fortran_LINK_FLAGS "-static-intel -static-libgcc -ipo")
-        set_target_properties(ZZ_polynomial PROPERTIES Fortran_COMPILE_FLAGS "-ipo -O3 -funroll-loops -no-prec-div")
-        set(CMAKE_Fortran_FLAGS_RELEASE "")
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc -ipo")
+        set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-O3 ")
+#        set_target_properties(ZZ_polynomial PROPERTIES Fortran_COMPILE_FLAGS "-ipo -O3 -funroll-loops -no-prec-div")
+        set(CMAKE_Fortran_FLAGS_RELEASE "-ipo -O3 -funroll-loops -no-prec-div")
     endif (CMAKE_BUILD_TYPE STREQUAL Release)
     set(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "")
 endif( CMAKE_Fortran_COMPILER_ID STREQUAL Intel )
@@ -58,7 +59,9 @@ if( CMAKE_Fortran_COMPILER_ID STREQUAL G95 )
 endif( CMAKE_Fortran_COMPILER_ID STREQUAL G95 )
 
 
-
+target_link_libraries(ZZ_polynomial
+  ${Boost_SERIALIZATION_LIBRARY}
+)
 
 INSTALL(TARGETS ZZ_polynomial
   RUNTIME DESTINATION bin

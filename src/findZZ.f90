@@ -15,10 +15,19 @@ subroutine find_ZZ_polynomial(pah,level)
     integer(kint), intent(in) :: level
 
     integer(kint) :: medat
+    logical :: hit
 
     if ( pah%nat >= 6 ) then
         call get_hash(pah, pah%hash_key)
+        call get_polynomial(pah, hit)
+        if (hit) then
+!            print *, 'got a hit in database, nat=', pah%nat
+            return
+        end if
     end if
+
+    
+
 
 ! ###########################
 ! # if pah contains 0 atoms #
@@ -62,8 +71,10 @@ subroutine find_ZZ_polynomial(pah,level)
         else
             call split_and_decompose(pah,medat,level)
         end if
+        if ( pah%nat >= 6 .and. medat == 0) then
+            call add_polynomial(pah)
+        end if
     end if
-
 
     return
 
