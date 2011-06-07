@@ -1,18 +1,4 @@
-/*
- * This software is provided under the terms of the GNU General
- * Public License as published by the Free Software Foundation.
- *
- * Copyright (c) 2007 Tom Portegys, All Rights Reserved.
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies.
- *
- * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED.
- */
+// For conditions of distribution and use, see copyright notice in graphHash.hpp
 
 /*
  * Compute an MD5 hash for a graph.
@@ -21,18 +7,48 @@
 #include "graphHash.hpp"
 
 // Constructor.
-GraphHash::GraphHash(Graph *graph, bool hashLabels)
+GraphHash::GraphHash()
+{
+   memset(code, 0, MD5_SIZE);
+   graph       = NULL;
+   vertexCoder = NULL;
+}
+
+
+// Destructor.
+GraphHash::~GraphHash()
+{
+   if (vertexCoder != NULL)
+   {
+      delete vertexCoder;
+   }
+   vertices.clear();
+}
+
+
+// Hash graph.
+#ifdef THREADS
+bool GraphHash::hash(Graph *graph, int numThreads, bool hashLabels)
+#else
+bool GraphHash::hash(Graph *graph, bool hashLabels)
+#endif
 {
    int         i, i2;
    VertexCoder *child;
 
+   vector<int> vertexList;
+
    map<pair<Graph::Vertex *, Graph::Edge *>,
        VertexCoder *, VertexCoder::ltcmpConnection> *vertexMap;
+
+   // Clear code.
+   memset(code, 0, MD5_SIZE);
 
    // Save graph.
    this->graph = graph;
 
    // Sort vertices by label.
+   vertices.clear();
    for (i = 0, i2 = (int)graph->vertices.size(); i < i2; i++)
    {
       vertices.push_back(graph->vertices[i]);
@@ -40,30 +56,90 @@ GraphHash::GraphHash(Graph *graph, bool hashLabels)
    sort(vertices.begin(), vertices.end(), ltcmpVertices);
 
    // Generate code for graph using vertex coders.
+   if (vertexCoder != NULL)
+   {
+      delete vertexCoder;
+   }
    vertexCoder = new VertexCoder();
    assert(vertexCoder != NULL);
+   if (vertexCoder == NULL)
+   {
+      return(false);
+   }
    for (i = 0, i2 = (int)vertices.size(); i < i2; i++)
    {
       vertexMap = new map<pair<Graph::Vertex *, Graph::Edge *>,
                           GraphHash::VertexCoder *, VertexCoder::ltcmpConnection>;
       assert(vertexMap != NULL);
+      if (vertexMap == NULL)
+      {
+         return(false);
+      }
       child = new VertexCoder(vertices[i], NULL, vertexCoder, 1, vertexMap);
       assert(child != NULL);
+      if (child == NULL)
+      {
+         delete vertexMap;
+         return(false);
+      }
       vertexCoder->children.push_back(child);
    }
-   vertexCoder->generateCode(hashLabels);
-   memcpy(code, vertexCoder->code, MD5_SIZE);
+#ifdef THREADS
+   bool result = vertexCoder->generateCode(numThreads, hashLabels, &vertexList);
+#else
+   bool result = vertexCoder->generateCode(hashLabels, &vertexList);
+#endif
+   if (result)
+   {
+      memcpy(code, vertexCoder->code, MD5_SIZE);
+   }
+   return(result);
 }
 
 
-// Destructor.
-GraphHash::~GraphHash()
+// Print graph and its hash.
+void GraphHash::print(FILE *fp)
 {
-   delete vertexCoder;
-   vertices.clear();
+   if (graph == NULL)
+   {
+      return;
+   }
+   graph->print(fp);
+   fprintf(fp, "Hash: ");
+   for (int i = 0; i < MD5_SIZE; i++)
+   {
+      fprintf(fp, "%d ", code[i]);
+   }
+   fprintf(fp, "\n");
 }
 
 
+// Dump graph and graph hash in Graphvis "dot" format.
+void GraphHash::dump(FILE *fp)
+{
+   char hash[MD5_SIZE * 5];
+
+   if (graph == NULL)
+   {
+      return;
+   }
+   fprintf(fp, "digraph {\n");
+   fprintf(fp, "\tgraph [size=\"8.5,11\",fontsize=14];\n");
+   fprintf(fp, "\tsubgraph cluster_0 {\n");
+   fprintf(fp, "\tlabel=\"Graph\";\n");
+   graph->dumpSub(fp);
+   fprintf(fp, "\t};\n");
+   fprintf(fp, "\tsubgraph cluster_1 {\n");
+   sprintf(hash, "Hash: ");
+   for (int i = 0; i < MD5_SIZE; i++)
+   {
+      sprintf(&hash[strlen(hash)], "%d ", code[i]);
+   }
+   fprintf(fp, "\tlabel=\"%s\";\n", hash);
+   vertexCoder->dump(fp);
+   fprintf(fp, "\t};\n");
+   fprintf(fp, "};\n");
+}
 
 
 // Less-than comparison of vertices by label.
@@ -149,7 +225,102 @@ void GraphHash::VertexCoder::purgeChildren()
 
 
 // Generate code.
-void GraphHash::VertexCoder::generateCode(bool hashLabels)
+#ifdef THREADS
+bool GraphHash::VertexCoder::generateCode(int numThreads, bool hashLabels,
+                                          vector<int> *vertexList)
+{
+   // Start additional update threads.
+   this->numThreads = numThreads;
+   terminate        = false;
+   int  n      = 0;
+   bool result = true;
+   if (numThreads > 1)
+   {
+      if (pthread_barrier_init(&expandBarrier, NULL, numThreads) != 0)
+      {
+         return(false);
+      }
+      if (pthread_mutex_init(&expandMutex, NULL) != 0)
+      {
+         pthread_barrier_destroy(&expandBarrier);
+         return(false);
+      }
+      threads = new pthread_t[numThreads - 1];
+      assert(threads != NULL);
+      if (threads == NULL)
+      {
+         pthread_mutex_destroy(&expandMutex);
+         pthread_barrier_destroy(&expandBarrier);
+         return(false);
+      }
+      struct ThreadInfo *info;
+      for (int i = 0; i < numThreads - 1; i++)
+      {
+         info = new struct ThreadInfo;
+         assert(info != NULL);
+         if (info == NULL)
+         {
+            result = false;
+            break;
+         }
+         info->coder      = this;
+         info->threadNum  = i + 1;
+         info->vertexList = vertexList;
+         if (pthread_create(&threads[i], NULL, expandThread, (void *)info) != 0)
+         {
+            delete info;
+            result = false;
+            break;
+         }
+         n++;
+      }
+   }
+
+   // Generate code.
+   if (result)
+   {
+      result = generateCode(hashLabels, vertexList);
+   }
+
+   // Terminate threads.
+   if (numThreads > 1)
+   {
+      // Unblock threads waiting on update barrier.
+      terminate = true;
+      expandVertices(0, vertexList);
+      for (int i = 0; i < n; i++)
+      {
+         pthread_join(threads[i], NULL);
+         pthread_detach(threads[i]);
+      }
+      pthread_mutex_destroy(&expandMutex);
+      pthread_barrier_destroy(&expandBarrier);
+      delete threads;
+   }
+   return(result);
+}
+
+
+// Vertex expander thread.
+void *GraphHash::VertexCoder::expandThread(void *arg)
+{
+   struct ThreadInfo      *info  = (struct ThreadInfo *)arg;
+   GraphHash::VertexCoder *coder = info->coder;
+   int threadNum = info->threadNum;
+
+   vector<int> *vertexList = info->vertexList;
+   delete info;
+   while (true)
+   {
+      coder->expandVertices(threadNum, vertexList);
+   }
+   return(NULL);
+}
+
+
+#endif
+
+bool GraphHash::VertexCoder::generateCode(bool hashLabels, vector<int> *vertexList)
 {
    int               i, j, s;
    struct MD5Context md5c;
@@ -159,49 +330,42 @@ void GraphHash::VertexCoder::generateCode(bool hashLabels)
    s = (int)children.size();
    if (vertex == NULL)
    {
-      // Iteratively expand children until fully expanded.
-      for (i = 0; i < s; i++)
-      {
-         children[i]->expand();
-      }
+      // Fully expand vertices.
       while (true)
       {
-         // Generate codes without labels to encode structure.
-         for (i = 0; i < s; i++)
-         {
-            children[i]->generateCode(false);
-         }
-
-         // All vertices are fully expanded?
+         vertexList->clear();
          for (i = 0; i < s; i++)
          {
             if (!children[i]->expanded)
             {
-               break;
+               vertexList->push_back(i);
             }
          }
-         if (i == s)
+         if (vertexList->empty())
          {
             break;
          }
-
-         // Expand vertices.
-         for (i = 0; i < s; i++)
+         else
          {
-            if (!children[i]->expanded)
+#ifdef THREADS
+            if (!expandVertices(0, vertexList))
+#else
+            if (!expandVertices(vertexList))
+#endif
             {
-               children[i]->expand();
+               return(false);
             }
          }
       }
    }
 
    // Recursively generate code.
-   unsigned char oldCode[MD5_SIZE];
-   memcpy(oldCode, code, MD5_SIZE);
    for (i = 0; i < s; i++)
    {
-      children[i]->generateCode(hashLabels);
+      if (!children[i]->generateCode(hashLabels))
+      {
+         return(false);
+      }
    }
    sort(children.begin(), children.end(), ltcmpCode);
    MD5Init(&md5c);
@@ -223,6 +387,10 @@ void GraphHash::VertexCoder::generateCode(bool hashLabels)
    }
    input = new unsigned char[(s * MD5_SIZE) + j];
    assert(input != NULL);
+   if (input == NULL)
+   {
+      return(false);
+   }
    if (vertex != NULL)
    {
       if (hashLabels)
@@ -233,7 +401,8 @@ void GraphHash::VertexCoder::generateCode(bool hashLabels)
       {
          if (hashLabels)
          {
-            memcpy(&input[sizeof(vertex->label)], &parentEdge->label, sizeof(parentEdge->label));
+            memcpy(&input[sizeof(vertex->label)],
+                   &parentEdge->label, sizeof(parentEdge->label));
          }
          if (parentEdge->directed)
          {
@@ -260,21 +429,89 @@ void GraphHash::VertexCoder::generateCode(bool hashLabels)
    MD5Update(&md5c, input, j);
    MD5Final(code, &md5c);
    delete [] input;
+   codeValid = true;
+   return(true);
+}
 
-   // Mark vertex as expanded if code not changed.
-   if (codeValid)
+
+// Expand vertices.
+#ifdef THREADS
+bool GraphHash::VertexCoder::expandVertices(int threadNum, vector<int> *vertexList)
+#else
+bool GraphHash::VertexCoder::expandVertices(vector<int> *vertexList)
+#endif
+{
+#ifdef THREADS
+   if (numThreads > 1)
    {
-      if (memcmp(oldCode, code, MD5_SIZE) == 0)
+      // Synchronize threads.
+      if (threadNum == 0)
       {
-         expanded = true;
+         expandResult = true;
+      }
+      int i = pthread_barrier_wait(&expandBarrier);
+      if ((i != PTHREAD_BARRIER_SERIAL_THREAD) && (i != 0))
+      {
+         pthread_exit(NULL);
+      }
+      if (terminate)
+      {
+         if (threadNum == 0)
+         {
+            return(true);
+         }
+         pthread_exit(NULL);
+      }
+
+      // Update vertices.
+      while (true)
+      {
+         pthread_mutex_lock(&expandMutex);
+         int v = -1;
+         if (expandResult && !vertexList->empty())
+         {
+            v = vertexList->back();
+            vertexList->pop_back();
+         }
+         pthread_mutex_unlock(&expandMutex);
+         if (v == -1)
+         {
+            break;
+         }
+         if (!children[v]->expand())
+         {
+            expandResult = false;
+         }
+      }
+
+      // Re-group threads.
+      pthread_barrier_wait(&expandBarrier);
+
+      return(expandResult);
+   }
+   else
+   {
+#endif
+   for (int i = 0, j = (int)vertexList->size(); i < j; i++)
+   {
+      if (!children[(*vertexList)[i]]->expand() ||
+          !children[(*vertexList)[i]]->generateCode(false))
+      {
+         return(false);
       }
    }
-   codeValid = true;
+   return(true);
+
+#ifdef THREADS
+}
+#endif
+
+
 }
 
 
 // Expand coder one level deeper.
-void GraphHash::VertexCoder::expand()
+bool GraphHash::VertexCoder::expand()
 {
    int         i, i2;
    VertexCoder *child;
@@ -285,8 +522,9 @@ void GraphHash::VertexCoder::expand()
 
    if (expanded)
    {
-      return;
+      return(true);
    }
+   expanded = true;
    if (children.empty())
    {
       // Expand this vertex.
@@ -298,10 +536,16 @@ void GraphHash::VertexCoder::expand()
             key.second = vertex->edges[i];
             if ((itr = vertexMap->find(key)) == vertexMap->end())
             {
-               child = new VertexCoder(vertex->edges[i]->target, vertex->edges[i], this, generation + 1, vertexMap);
+               child = new VertexCoder(vertex->edges[i]->target,
+                                       vertex->edges[i], this, generation + 1, vertexMap);
                assert(child != NULL);
+               if (child == NULL)
+               {
+                  return(false);
+               }
                children.push_back(child);
                (*vertexMap)[key] = child;
+               expanded          = false;
             }
             else
             {
@@ -311,6 +555,7 @@ void GraphHash::VertexCoder::expand()
                if (child->generation == generation + 1)
                {
                   children.push_back(child);
+                  expanded = false;
                }
             }
          }
@@ -320,10 +565,16 @@ void GraphHash::VertexCoder::expand()
             key.second = vertex->edges[i];
             if ((itr = vertexMap->find(key)) == vertexMap->end())
             {
-               child = new VertexCoder(vertex->edges[i]->source, vertex->edges[i], this, generation + 1, vertexMap);
+               child = new VertexCoder(vertex->edges[i]->source,
+                                       vertex->edges[i], this, generation + 1, vertexMap);
                assert(child != NULL);
+               if (child == NULL)
+               {
+                  return(false);
+               }
                children.push_back(child);
                (*vertexMap)[key] = child;
+               expanded          = false;
             }
             else
             {
@@ -333,6 +584,7 @@ void GraphHash::VertexCoder::expand()
                if (child->generation == generation + 1)
                {
                   children.push_back(child);
+                  expanded = false;
                }
             }
          }
@@ -345,10 +597,18 @@ void GraphHash::VertexCoder::expand()
       {
          if (children[i]->creator == this)
          {
-            children[i]->expand();
+            if (!children[i]->expand())
+            {
+               return(false);
+            }
+         }
+         if (!children[i]->expanded)
+         {
+            expanded = false;
          }
       }
    }
+   return(true);
 }
 
 

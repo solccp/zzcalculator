@@ -2,7 +2,7 @@
  * This software is provided under the terms of the GNU General
  * Public License as published by the Free Software Foundation.
  *
- * Copyright (c) 2007 Tom Portegys, All Rights Reserved.
+ * Copyright (c) 2007-2011 Tom Portegys, All Rights Reserved.
  * Permission to use, copy, modify, and distribute this software
  * and its documentation for NON-COMMERCIAL purposes and without
  * fee is hereby granted provided that this copyright notice
@@ -27,7 +27,9 @@
 #include <map>
 #include <algorithm>
 #include <assert.h>
-#include <cstring>
+#ifdef THREADS
+#include <pthread.h>
+#endif
 #include "graph.hpp"
 #include "md5.h"
 using namespace std;
@@ -43,10 +45,18 @@ public:
    unsigned char code[MD5_SIZE];
 
    // Constructor.
-   GraphHash(Graph *graph, bool hashLabels = true);
+   GraphHash();
 
    // Destructor.
    ~GraphHash();
+
+   // Hash graph.
+#ifdef THREADS
+   bool hash(Graph *graph, int numThreads = 1, bool hashLabels = true);
+
+#else
+   bool hash(Graph *graph, bool hashLabels = true);
+#endif
 
    // Print graph and its hash.
    void print(FILE *fp = stdout);
@@ -86,19 +96,46 @@ public:
                   map<pair<Graph::Vertex *, Graph::Edge *>,
                       VertexCoder *, ltcmpConnection> *vertexMap = NULL);
       ~VertexCoder();
-      void generateCode(bool hashLabels = true);
+#ifdef THREADS
+      bool generateCode(int numThreads, bool hashLabels = true,
+                        vector<int> *vertexList = NULL);
+#endif
+      bool generateCode(bool hashLabels = true, vector<int> *vertexList = NULL);
       void printCode(FILE *fp = stdout);
       void dump(FILE *fp = stdout);
 
 private:
+#ifdef THREADS
+      bool expandVertices(int threadNum, vector<int> *vertexList);
+
+      bool expandResult;
+      static void *expandThread(void *threadInfo);
+
+#else
+      bool expandVertices(vector<int> *vertexList);
+#endif
       bool expanded;
       int  generation;
-      void expand();
+      bool expand();
 
       map<pair<Graph::Vertex *, Graph::Edge *>,
           VertexCoder *, ltcmpConnection> *vertexMap;
       static bool ltcmpCode(VertexCoder *a, VertexCoder *b);
       void purgeChildren();
+
+#ifdef THREADS
+      int               numThreads;
+      bool              terminate;
+      pthread_barrier_t expandBarrier;
+      pthread_mutex_t   expandMutex;
+      pthread_t         *threads;
+      struct ThreadInfo
+      {
+         VertexCoder *coder;
+         int         threadNum;
+         vector<int> *vertexList;
+      };
+#endif
    };
 
    // Root vertex coder.

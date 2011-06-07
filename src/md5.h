@@ -1,7 +1,7 @@
 #ifndef MD5_H
 #define MD5_H
 
-#include "stdint.h"
+#include <stdint.h>
 
 #ifdef __alpha
 typedef uint32_t uint32;

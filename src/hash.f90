@@ -15,6 +15,11 @@ subroutine get_hash(pah, key)
     integer :: numEdges
     integer, dimension(:,:), allocatable :: edges
 
+    if (pah%hash_computed) then
+        return
+    end if
+
+
     numEdges = 0
     do i = 1, pah%nat
         do j = 1, pah%neighbornumber(i)
@@ -68,6 +73,7 @@ subroutine get_polynomial(pah, hit)
     end if
 
     call get_polynomial_kernel(pah%hash_key, block_size, pah%polynomial)
+    pah%polynomial_computed = .true.
 
 end subroutine
 

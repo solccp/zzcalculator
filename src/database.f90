@@ -8,42 +8,37 @@ module database_m
         integer :: hits
         type(tree_node), pointer :: node => NULL()
         type(database_entry), pointer :: next => NULL()
-!        type(database_entry), pointer :: previous => NULL()
     end type
     
 
     save
     type(database_entry), pointer :: database_head => NULL()
-    integer :: max_size = 1
-    logical :: set_maxsize = .false.
     integer :: database_size = 0
+
+    integer :: max_size = 1
+    logical :: setted_max_size = .false.
 
 contains
 
-subroutine set_max_size(nat)
-    integer, intent(in) :: nat
-    max_size = nat
-    set_maxsize = .true.
+subroutine set_max_size(max_len)
+    integer, intent(in) :: max_len
+    max_size = max_len    
+    setted_max_size = .true.
 end subroutine
 
-subroutine add_database_entry(node, hit)
-    type(tree_node), intent(inout), pointer :: node
-    type(structure), pointer :: pah
-    logical, intent(out) :: hit
-    character(len=max_size) :: ch_key
-    type(varying_string) :: str_key
-    integer, dimension(max_size) :: temp_key
-    type(database_entry), pointer :: new_entry
-    type(database_entry), pointer :: head 
 
-    if ( .not. set_maxsize ) then
-        stop 'you forgot to call set_max_size'
+subroutine get_key(pah, key)
+    type(structure), intent(inout) :: pah
+    integer, dimension(max_size) :: temp_key
+    character(len=max_size) :: ch_key
+    type(varying_string), intent(out) :: key
+    integer :: i
+
+    if ( setted_max_size == .false. ) then
+        print *, 'error database::set_max_size was not called'
+        stop
     end if
 
-    pah => node%pah
-
-!============================================
-! create key
     temp_key = 0
     do i=1, pah%nat
         temp_key(pah%indexmapping(i)) = 1
@@ -53,7 +48,22 @@ subroutine add_database_entry(node, hit)
         write(ch_key(i:i),'(i1)') temp_key(i)
     end do
 
-    str_key = ch_key
+    key = ch_key
+    
+end subroutine
+
+
+subroutine add_database_entry(node, hit)
+    type(tree_node), intent(inout), pointer :: node
+    type(structure), pointer :: pah
+    logical, intent(out) :: hit
+    type(varying_string) :: str_key
+    type(database_entry), pointer :: new_entry
+    type(database_entry), pointer :: head 
+
+    pah => node%pah
+
+    call get_key(pah, str_key)
 !==========================================
 
 
@@ -125,7 +135,7 @@ subroutine get_database_first_entry(node)
         node => d_entry%node
         do while(associated(d_entry))
             node => d_entry%node
-            if ( .not. node%hasChild ) then
+            if ( (.not. node%hasChild) .and. (.not. node%pah%polynomial_computed)) then
                 return
             end if
             d_entry => d_entry%next

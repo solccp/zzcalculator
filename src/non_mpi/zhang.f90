@@ -31,7 +31,7 @@ program zhang_polynomial
 !========================================
     
     type(tree_node), pointer :: root
-    integer, parameter :: max_tree_size = 5000
+    integer :: max_tree_size = 2000
     logical :: reach_limit
     type(database_entry), pointer :: head
     integer :: total_required_strs
@@ -48,7 +48,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:d')
+        okey = getopt('Pfl:b:n:v')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -76,9 +76,15 @@ program zhang_polynomial
         if(okey == '.') then
             input_fname = optarg
         end if
-        if(okey == 'd') then
-            call load_database_from_file()
+        if (okey == 'n') then
+            read(optarg, *) max_tree_size
         end if
+        if (okey == 'v') then
+            options%verbose = .true.
+        end if
+!        if(okey == 'd') then
+!            call load_database_from_file()
+!        end if
     end do
 
 
@@ -100,36 +106,31 @@ program zhang_polynomial
     
     level = 0
 
-    if (.false.) then ! ( .not. options%print_intermediate_structures ) then
+    if ( .not. options%print_intermediate_structures ) then
+
         allocate(root)
         root%pah => pah
-
         call set_max_size(int(maxval(pah%indexmapping)))
 
         call build_tree(root, max_tree_size, reach_limit)
- 
-        print *, 'database size ', database_size
+
         total_required_strs = 0
         head => database_head
         do while(associated(head))
             if (.not. head%node%hasChild) then
                 total_required_strs = total_required_strs + 1
-                print *, head%hits, head%node%pah%nat
             end if
             head => head%next
         end do
-        print *, 'required_strs ', total_required_strs
-        
-
         head => database_head
         i = 0
         do while(associated(head))
             if (.not. head%node%hasChild) then
                 i = i + 1
-                print *, 'running (', i, '/' , total_required_strs , ')...'
-                call find_ZZ_polynomial(head%node%pah, level)
-                
-!                write(*, '(a,i3)') char(head%key), head%hits
+                if ( options%verbose ) then
+                    print *, 'running (', i, '/' , total_required_strs , ')...'
+                end if
+                call find_ZZ_polynomial(head%node%pah, level)               
             end if
             head => head%next
         end do
@@ -148,15 +149,16 @@ program zhang_polynomial
         call close_file()
     end if
 
+!    print *, 'hash: ', pah%hash_key
     ! #############################################################
     ! # find recursively the ZZ polynomial of the given structure #
     ! #############################################################
 
 
 !    call print_all_database_entry()
-    call save_database_to_file()
-    print *, 'db hit: ', stat_hit
-    print *, 'db no_hit: ', stat_no_hit
+!    call save_database_to_file()
+!    print *, 'db hit: ', stat_hit
+!    print *, 'db no_hit: ', stat_no_hit
 
     call finalize_temp_space()
 

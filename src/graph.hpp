@@ -1,18 +1,4 @@
-/*
- * This software is provided under the terms of the GNU General
- * Public License as published by the Free Software Foundation.
- *
- * Copyright (c) 2007 Tom Portegys, All Rights Reserved.
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED.
- */
+// For conditions of distribution and use, see copyright notice in mona.hpp
 
 /*
  * Graph.
@@ -28,68 +14,69 @@
 #include <stdlib.h>
 #include <vector>
 #include <assert.h>
+#include "fileio.h"
 using namespace std;
 
 class Graph
 {
-    public:
+public:
 
-        // Null label.
-        enum { NULL_LABEL=(unsigned short)(-1) };
+   // Null label.
+   enum { NULL_LABEL=(unsigned short)(-1) };
 
-        class Edge;
+   class Edge;
 
-        // Graph vertex.
-        class Vertex
-        {
-            public:
-                unsigned short label;
-                vector<Edge *> edges;
-                Vertex(unsigned short label=NULL_LABEL);
-                ~Vertex();
-        };
+   // Graph vertex.
+   class Vertex
+   {
+public:
+      unsigned short label;
+      vector<Edge *> edges;
+      Vertex(unsigned short label = NULL_LABEL);
+      void listEdges(vector<Edge *>& edgeList);
+   };
 
-        // Graph edge.
-        class Edge
-        {
-            public:
-                unsigned short label;
-                Vertex *source;
-                Vertex *target;
-                bool directed;
-                Edge(unsigned short label=NULL_LABEL);
-        };
+   // Graph edge.
+   class Edge
+   {
+public:
+      unsigned short label;
+      Vertex         *source;
+      Vertex         *target;
+      bool           directed;
+      Edge(unsigned short label = NULL_LABEL);
+   };
 
-        // Vertices.
-        vector<Vertex *> vertices;
+   // Vertices.
+   vector<Vertex *> vertices;
 
-        // Constructor.
-        Graph();
+   // Constructor.
+   Graph();
 
-        // Destructor.
-        ~Graph();
+   // Destructor.
+   ~Graph();
 
-        // Add vertex.
-        Vertex *addVertex(unsigned short label=NULL_LABEL);
+   // Add vertex.
+   Vertex *addVertex(unsigned short label = NULL_LABEL);
 
-        // Connect vertices.
-        Edge *connectVertices(Vertex *source, Vertex *target,
-            bool directed, unsigned short label=NULL_LABEL);
+   // Connect vertices.
+   Edge *connectVertices(Vertex *source, Vertex *target,
+                         bool directed, unsigned short label = NULL_LABEL);
 
-        // Get vertex by label (returns first found).
-        Vertex *getVertex(unsigned short label);
+   // Get vertex by label (returns first found).
+   Vertex *getVertex(unsigned short label);
 
-        // Load and save.
-        void load(FILE *fp);
-        void save(FILE *fp);
+   // Load and save.
+   void load(FILE *fp);
+   void save(FILE *fp);
 
-        // Print.
-        void print(FILE *fp=stdout);
-        void print(char *label, FILE *fp=stdout);
+   // Print.
+   void print(FILE *fp = stdout);
+   void print(char *label, FILE *fp = stdout);
 
-        // Dump graph in Graphviz "dot" format.
-        void dump(FILE *fp=stdout);
-        void dump(char *label, FILE *fp=stdout);
-        void dumpSub(FILE *fp=stdout);
+   // Dump graph in Graphviz "dot" format.
+   void dump(FILE *fp = stdout);
+   void dump(char *label, FILE *fp = stdout);
+   void dumpSub(FILE *fp = stdout);
 };
 #endif

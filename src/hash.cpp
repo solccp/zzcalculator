@@ -5,6 +5,7 @@
 #include <cstdio>
 #include "graphHash.hpp"
 #include <sstream>
+#include <cstdlib>
 
 #include <fstream>
 #include <boost/archive/text_oarchive.hpp>
@@ -14,8 +15,8 @@
 #include <boost/serialization/map.hpp>
 
 // a non-portable native binary archive
-//#include <boost/archive/binary_oarchive.hpp>
-//#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 
 using namespace std;
 
@@ -125,7 +126,7 @@ extern "C"
     void make_hash_(int32_t* nat, int32_t* num_of_edges, int32_t* edges, char* key)
     {
         char tmp_key[3];
-
+//        int nthreads = 1;
         Graph *graph = new Graph();
         for(int i=0; i< *nat; ++i)
         {
@@ -138,7 +139,16 @@ extern "C"
             v2 = graph->vertices[edges[i*2+1]-1];
             graph->connectVertices(v1, v2, false);
         }
-        GraphHash *hash = new GraphHash(graph, false);
+        GraphHash *hash = new GraphHash() ; //(graph, false);
+//        char* ncpu = getenv ( "OMP_NUM_THREADS" );
+//        if ( ncpu != NULL )
+//        {
+//            int tmp_ncpus = atoi ( ncpu );
+//            if (tmp_ncpus != 0)
+//                nthreads = tmp_ncpus;
+//        }
+
+        hash->hash(graph, false);
 
         for (int i=0 ; i< MD5_SIZE; ++i)
         {
@@ -202,22 +212,27 @@ extern "C"
         for(int i=0; i< *nterms; ++i)
         {
             int offset = (*block_size)+1 ;
-            terms.push_back(Term(i, *block_size, poly[i*offset], &poly[i*offset+1]));
+            Term t(i, *block_size, poly[i*offset], &poly[i*offset+1]);
+            if ( t.m_leadpow == 1 && t.m_coeffs[0] ==0 ) 
+                continue;
+            terms.push_back(t);
         }
         std::pair<std::map<std::string, Polynomial>::iterator,bool> ret;
         std::pair<std::string, Polynomial> new_entry(hash_key, Polynomial(terms));
         ret = hash_database.insert(new_entry);
-//        if ( ret.second == false ) 
-//        {
-//            cout << "same hash" << endl;
-//            if ( new_entry.second != ret.first->second )
-//            {
-//                cout << "two str have the same HASH!!!" << endl;
-//                cout << new_entry.first << endl;
-//                cout << new_entry.second << endl;
-//                cout << ret.first->second << endl;
-//            }
-//        }
+/*        if ( ret.second == false ) 
+        {
+            if ( new_entry.second != ret.first->second )
+            {
+                cout << "same hash" << endl;
+                cout << "two str have the same HASH!!!" << endl;
+                cout << hash_key << endl;
+                cout << new_entry.first << endl;
+                cout << new_entry.second << endl;
+                cout << ret.first->second << endl;
+            }
+        }
+*/
     }
 
     void print_all_database_entry_()
@@ -234,8 +249,8 @@ extern "C"
         cout << "database size: " << hash_database.size() << endl;
         std::ofstream ofs("database.new");
         {
-//            boost::archive::binary_oarchive oa(ofs);
-            boost::archive::text_oarchive oa(ofs);
+            boost::archive::binary_oarchive oa(ofs);
+//            boost::archive::text_oarchive oa(ofs);
             oa << hash_database ;
         }
     }
@@ -244,8 +259,8 @@ extern "C"
     {
         std::ifstream ifs("database");
         {
-//            boost::archive::binary_iarchive ia(ifs);
-            boost::archive::text_iarchive ia(ifs);
+            boost::archive::binary_iarchive ia(ifs);
+//            boost::archive::text_iarchive ia(ifs);
             ia >> hash_database ;
         }
         cout << "Loaded database size: " << hash_database.size() << endl;

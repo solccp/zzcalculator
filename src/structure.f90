@@ -12,6 +12,8 @@ module structure_module
         integer(kint) :: nbondlistentries
 
         character(len=32) :: hash_key
+        logical :: hash_computed = .false.
+        logical :: polynomial_computed = .false.
 
 
         integer(kint),allocatable,dimension(:) :: indexmapping

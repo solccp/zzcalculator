@@ -16,15 +16,18 @@ subroutine find_ZZ_polynomial(pah,level)
 
     integer(kint) :: medat
     logical :: hit
+    
+    integer, parameter :: min_nat_hash = 6
 
-    if ( pah%nat >= 6 ) then
-        call get_hash(pah, pah%hash_key)
-        call get_polynomial(pah, hit)
-        if (hit) then
-!            print *, 'got a hit in database, nat=', pah%nat
-            return
-        end if
-    end if
+
+!    if ( pah%nat >= min_nat_hash ) then
+!        call get_hash(pah, pah%hash_key)
+!        call get_polynomial(pah, hit)
+!        if (hit) then
+!           print *, 'got a hit in database, nat=', pah%nat
+!            return
+!        end if
+!    end if
 
     
 
@@ -36,6 +39,7 @@ subroutine find_ZZ_polynomial(pah,level)
         pah%order = 0
         allocate(pah%polynomial(pah%order+1))
         pah%polynomial(1) = setvli(1_kint)
+        pah%polynomial_computed = .true.
 
         if (options%print_intermediate_structures) then
             if (pah%hasDisconnectedParent) then
@@ -52,7 +56,7 @@ subroutine find_ZZ_polynomial(pah,level)
         pah%order = 0
         allocate(pah%polynomial(pah%order+1))
         pah%polynomial(1)=setvli(0_kint)
-
+        pah%polynomial_computed = .true.
 ! ##########################################
 ! # check if the graph of pah is connected #
 ! ##########################################
@@ -71,9 +75,9 @@ subroutine find_ZZ_polynomial(pah,level)
         else
             call split_and_decompose(pah,medat,level)
         end if
-        if ( pah%nat >= 6 .and. medat == 0) then
-            call add_polynomial(pah)
-        end if
+!        if ( pah%nat >= min_nat_hash .and. medat == 0) then
+!            call add_polynomial(pah)
+!        end if
     end if
 
     return
