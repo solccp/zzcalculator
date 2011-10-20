@@ -1,6 +1,7 @@
-module output
-
-    character(len=300), save :: output_filename = 'intermediate_strs.yaml'
+module output_m
+    use input_m
+    implicit none
+    character(len=100), save :: output_filename = 'intermediate_strs.yaml'
 
     integer, save :: output_unit = -1
 
@@ -15,13 +16,13 @@ contains
         open(file=trim(output_filename), unit=output_unit) 
     end subroutine
     subroutine write_connections(pah)
-        use types_module
-        use structure_module
+    
+        use structure_m
         use options_m
         type(structure), intent(in) :: pah
         logical, parameter :: flow = .true.
-        integer(kint) :: i
-        integer(kint), save :: output_index = 0
+        integer :: i,j
+        integer, save :: output_index = 0
 
 
         if (pah%ringnumber < options%print_order) then
@@ -32,11 +33,7 @@ contains
             call open_file()
         end if
 
-
-        
         output_index = output_index +1
-
-
 
         write(output_unit,'(a)') '---'
         write(output_unit,'(a,I0)') 'structure_id: ', output_index
@@ -83,8 +80,7 @@ contains
         end do 
     end function
     subroutine write_connections_partial(pah)
-        use types_module
-        use structure_module
+        use structure_m
         type(structure), intent(in) :: pah
         logical :: inuse
         integer :: i
@@ -97,17 +93,16 @@ contains
         end if
 
         write(pah%storage_unit, '(2(I6,1X))') pah%doublebondnumber, pah%ringnumber
-        do i=1, pah%doublebondnumber
+        do i = 1, pah%doublebondnumber
             write(pah%storage_unit, '(2(I6,1X))') pah%doublebondlist(:,i)
         end do
-        do i=1, pah%ringnumber
+        do i = 1, pah%ringnumber
             write(pah%storage_unit, '(6(I6,1X))') pah%ringlist(:,i)
         end do
     end subroutine
 
     subroutine combine_connection_output(pah, son1, son2)
-        use types_module
-        use structure_module
+        use structure_m
         type(structure), intent(in) :: pah, son1, son2
         type(structure) :: temp
         integer :: ndb1, nring1
@@ -171,25 +166,30 @@ contains
     end subroutine
 
     subroutine write_xyz(pah, filename)
-        use types_module
-        use structure_module
+        use structure_m
         type(structure), intent(in) :: pah
         character(len=*), intent(in) :: filename
         integer :: i
 
-
-
         open(unit=99, file=trim(filename))
-        write(99, '(i0)') pah%nat
-        write(99, *) ''
-        do i=1, pah%nat
-            write(99, '(a, 3(2x, F12.6))') 'C', geom(:,pah%indexmapping(i))
-        end do
-
-        
+        call write_xyz_unit(pah, 99, '')
         close(99) 
-            
+    end subroutine
+    subroutine write_xyz_unit(pah, unitnum, title)
+        use structure_m
+        type(structure), intent(in) :: pah
+        integer, intent(in) :: unitnum
+        character(len=*), intent(in) :: title
+        integer :: i
 
+        if ( pah%nat == 0 ) then
+            return 
+        end if
+        write(unitnum, '(i0)') pah%nat
+        write(unitnum, '(a)') trim(title)
+        do i=1, pah%nat
+            write(unitnum, '(a, 3(2x, F12.6))') 'C', ori_geom(:,pah%indexmapping(i))
+        end do
 
     end subroutine
 

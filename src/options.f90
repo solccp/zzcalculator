@@ -9,7 +9,12 @@ module options_m
         character(len=80) :: bondlistfile
         logical :: has_bondlistfile
         logical :: verbose 
-!        logical :: use_hash
+        logical :: decompose_print
+        logical :: testrun
+!        logical :: use_database
+!        logical :: create_database
+!        character(len=80) :: databasefile
+
     end type
 
     type(options_t) :: options    
@@ -20,7 +25,10 @@ contains
         options%has_bondlistfile = .false.
         options%force_print_structures = .false.
         options%verbose = .false.
-!        options%use_hash = .false.
+        options%testrun = .false.               
+        options%decompose_print = .false.
+!        options%use_database = .false.
+!        options%create_database = .false.
     end subroutine
 
 end module

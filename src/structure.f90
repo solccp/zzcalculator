@@ -1,48 +1,54 @@
-module structure_module
-    
+module structure_m
+    use accuracy_m
+    use big_integer_m
     use iso_varying_string
-    use types_module
-    type, public :: structure
-        integer(kint) :: nat
-        integer(kint),allocatable,dimension(:) :: neighbornumber
-        integer(kint),allocatable,dimension(:,:) :: neighborlist
-        integer(kint) :: order
-        type(vlonginteger),allocatable,dimension(:) :: polynomial
-        integer(kint), allocatable,dimension(:,:) :: bondlist
-        integer(kint) :: nbondlistentries
 
-        character(len=32) :: hash_key
-        logical :: hash_computed = .false.
+    type, public :: structure
+        integer :: nat
+        integer, allocatable, dimension(:) :: neighbornumber
+        integer, allocatable, dimension(:,:) :: neighborlist
+        integer :: order
+        type(big_integer), allocatable, dimension(:) :: polynomial
+        integer, allocatable, dimension(:,:) :: bondlist
+        integer :: nbondlistentries
+
         logical :: polynomial_computed = .false.
 
-
-        integer(kint),allocatable,dimension(:) :: indexmapping
-        integer(kint) :: doublebondnumber
-        integer(kint), allocatable, dimension(:,:) :: doublebondlist
-        integer(kint) :: ringnumber
-        integer(kint), allocatable, dimension(:,:) :: ringlist
+        integer, allocatable, dimension(:) :: indexmapping
+        integer :: doublebondnumber
+        integer, allocatable, dimension(:,:) :: doublebondlist
+        integer :: ringnumber
+        integer, allocatable, dimension(:,:) :: ringlist
         logical :: hasDisconnectedParent
         integer :: storage_unit
+
+        logical :: hasDanglingBond = .false.
+        integer :: nextDanglingBond = 0
+
+
     end type structure
 
-    type ::  tree_node
-        type(varying_string) :: key
+    type structure_ptr
+        type(structure), pointer :: ptr
+    end type
+
+    type ::  pah_tree_node
+        !type(varying_string) :: key
+        integer :: shared_count = 0
         logical :: hasChild = .false.
         type(structure), pointer :: pah => NULL()
         
-        type(tree_node), pointer :: child_corners => NULL()
-        type(tree_node), pointer :: child_bond => NULL()   
-        type(tree_node), pointer :: child_ring => NULL()   
-        type(tree_node), pointer :: child_son1 => NULL()   
-        type(tree_node), pointer :: child_son2 => NULL()   
+        type(pah_tree_node), pointer :: parent => NULL()
+        type(pah_tree_node), pointer :: child_corners => NULL()
+        type(pah_tree_node), pointer :: child_bond => NULL()   
+        type(pah_tree_node), pointer :: child_ring => NULL()   
+        type(pah_tree_node), pointer :: child_son1 => NULL()   
+        type(pah_tree_node), pointer :: child_son2 => NULL()   
     end type
 
-    type :: tree_node_ptr
-        type(tree_node), pointer :: node
+    type :: pah_tree_node_ptr
+        type(pah_tree_node), pointer :: ptr
     end type
-
-    save
-    real(kreal),allocatable,dimension(:,:) :: geom
     
 
 contains 
@@ -66,7 +72,6 @@ contains
         end if
 
         if (options%print_intermediate_structures) then
-
             if (allocated(pah%doublebondlist)) then
                 deallocate(pah%doublebondlist)
             end if
@@ -76,4 +81,4 @@ contains
         end if
     end subroutine
 
-end module
+end module 

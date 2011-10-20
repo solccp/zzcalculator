@@ -2,6 +2,8 @@
 
 if (TEST_IMSTR)
     execute_process(COMMAND ${TEST_PROG} -P -f ${SOURCEDIR}/${TEST_NAME}.in TIMEOUT 120 RESULT_VARIABLE HAD_ERROR OUTPUT_FILE output.txt ERROR_FILE error.txt) 
+elseif(TEST_BL)
+    execute_process(COMMAND ${TEST_PROG} -b ${SOURCEDIR}/${TEST_NAME}.bl ${SOURCEDIR}/${TEST_NAME}.bin TIMEOUT 120 RESULT_VARIABLE HAD_ERROR OUTPUT_FILE output.txt ERROR_FILE error.txt) 
 else ()
     execute_process(COMMAND ${TEST_PROG} ${SOURCEDIR}/${TEST_NAME}.in TIMEOUT 120 RESULT_VARIABLE HAD_ERROR OUTPUT_FILE output.txt ERROR_FILE error.txt) 
 endif()

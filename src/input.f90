@@ -1,3 +1,16 @@
+
+module input_m
+    use accuracy_m
+    use structure_m
+    use options_m
+    use utils_m
+    use operator_m
+    implicit none
+
+    real(kreal), allocatable, dimension(:,:), save :: ori_geom
+
+contains
+
 !############################ subroutine read_input #################################
 !####################################################################################
 subroutine read_input(input_fname,pah)
@@ -5,26 +18,20 @@ subroutine read_input(input_fname,pah)
 ! read the geometry of a polycyclic benzenoid structure pah from the file 'geometry',
 ! filter out only the carbon atoms, and create the topological matrix for it
 !
-    use types_module
-    use structure_module
-    use options_m
-    implicit none
     character(len=*), intent(in) :: input_fname
     type(structure), intent(inout) :: pah
 
-    integer(kind=4) :: info
-    integer(kint) :: cnat=0,status,bnat,i,j,k,nhex,l,m,errorcode,a1,a2
-    integer(kint),allocatable,dimension(:,:) :: lista
-    integer(kint),allocatable,dimension(:,:) :: localbondlist
+    integer :: info
+    integer :: cnat, status, bnat, i, j, k, nhex, l, m, errorcode, a1, a2
+    integer, allocatable, dimension(:,:) :: lista
+    integer, allocatable, dimension(:,:) :: localbondlist
     character(len=2) :: atname
-    real(kreal),parameter :: ccdist=1.7d0
-    real(kreal) :: inertia(3,3),eival(3),work(100)
-!    real(kreal),allocatable,dimension(:,:) :: geom
-    integer(kint),allocatable,dimension(:) :: map
-    integer(kint),allocatable,dimension(:) :: rmap
-    real(kreal),dimension(3) :: x
-    real(kreal) :: dist
-    logical :: inlist,bondfileexists
+    real(kreal) :: inertia(3,3), eival(3), work(100)
+    real(kreal), allocatable, dimension(:,:) :: geom
+    integer, allocatable, dimension(:) :: map
+    integer, allocatable, dimension(:) :: rmap
+    real(kreal), dimension(3) :: x
+    logical :: inlist, bondfileexists
 
     ! ######################
     ! # read geometry file #
@@ -33,18 +40,21 @@ subroutine read_input(input_fname,pah)
     read(20,*) bnat
     read(20,*)
     allocate(geom(3,bnat))
+    allocate(ori_geom(3,bnat))
     allocate(map(bnat))
     allocate(rmap(bnat))
+    cnat = 0
     map = 0
     rmap = 0
-    do i=1,bnat
-        read(20,*)atname,(x(j),j=1,3)
+    do i = 1, bnat
+        read(20,*) atname,(x(j),j=1,3)
         if (atname == 'C' .or. atname == 'c') then
             cnat = cnat+1
             map(i) = cnat
             rmap(cnat) = i
             geom(:,cnat) = x(:)
         end if
+        ori_geom(:,i) = x(:)
     end do
     close(20)
 
@@ -87,18 +97,18 @@ subroutine read_input(input_fname,pah)
     ! ####################################################
     ! # read (if provided) the preferred partition order #
     ! ####################################################
-    pah%nbondlistentries=0
+    pah%nbondlistentries = 0
     if (options%has_bondlistfile) then
         inquire(file=trim(options%bondlistfile),exist=bondfileexists)
         if (bondfileexists) then
             allocate(localbondlist(2,cnat))
             open(21,file=trim(options%bondlistfile))
             do
-                read(21,*,iostat=errorcode)a1,a2
+                read(21,*,iostat=errorcode) a1,a2
                 if (errorcode == 0) then
-                    pah%nbondlistentries=pah%nbondlistentries+1
-                    localbondlist(1,pah%nbondlistentries)=map(a1)
-                    localbondlist(2,pah%nbondlistentries)=map(a2)
+                    pah%nbondlistentries =pah%nbondlistentries + 1
+                    localbondlist(1,pah%nbondlistentries) = map(a1)
+                    localbondlist(2,pah%nbondlistentries) = map(a2)
                     if (a1 > bnat .or. a2 > bnat) then
                         write(*,*)"Ooops, looks like your file: bondlist"
                         write(*,*)"does not correspond to your input file"
@@ -114,13 +124,14 @@ subroutine read_input(input_fname,pah)
                 end if
             end do
             allocate(pah%bondlist(2,pah%nbondlistentries))
-            pah%bondlist=localbondlist(:,1:pah%nbondlistentries)
+            pah%bondlist = localbondlist(:,1:pah%nbondlistentries)
             deallocate(localbondlist)
             close(21)
             call clean_bond_list(pah)
         end if
     end if
 
+!    call print_bondlist(pah)
     ! #########################################################
     ! # find all substructures with removed one aromatic ring #
     ! #########################################################
@@ -156,8 +167,14 @@ subroutine read_input(input_fname,pah)
 !        end do
 !    end do
 !    close(22)
+
+    deallocate(map)
+    deallocate(rmap)
     return
 
 end subroutine read_input
 !####################################################################################
 !######################### end of subroutine read_input #############################
+
+
+end module input_m

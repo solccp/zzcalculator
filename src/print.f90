@@ -7,12 +7,13 @@ subroutine print_ZZ_polynomial(pah)
 ! and later the chunks of the string longer than 80 characters are
 ! displayed at stdout
 !
-    use types_module
-    use structure_module
+    use accuracy_m
+    use structure_m
+    use big_integer_m
     implicit none
     type(structure), intent(in) :: pah
-    integer(kint) :: i,cpos
-    type(vlonginteger) :: total
+    integer :: i,cpos
+    type(big_integer) :: total
     character(len=4000) :: finalZZpolynomial
 
 ! #########################
@@ -76,11 +77,12 @@ subroutine print_int_in_string(pos,string,val)
 !
 ! prints integer val in the string at position pos
 !
-    use types_module
-    use structure_module
+    use accuracy_m
+    use structure_m
     implicit none
-    integer(kint) :: val,pos
-    character(len=1000) :: string
+    integer, intent(in) :: val
+    integer, intent(inout) :: pos
+    character(len=*), intent(inout) :: string
     integer, parameter :: int_len = range(val)
 
     write(string(pos:),'(i0)')val

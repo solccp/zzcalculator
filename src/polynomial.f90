@@ -1,3 +1,32 @@
+
+
+module polynomial_m
+    use accuracy_m
+    use big_integer_m
+    use structure_m
+    implicit none
+
+contains
+
+subroutine clean_polynomial(pah)
+    type(structure), intent(inout) :: pah
+    integer :: i
+    integer :: final_order
+
+    final_order = pah%order
+    do i = pah%order, 0, -1
+        if ( pah%polynomial(i+1)%leadpow == 1_kint .and. pah%polynomial(i+1)%tabl(1) == 0_kint ) then
+            final_order = i
+        else
+            exit
+        end if
+    end do
+
+    pah%order = final_order
+    
+end subroutine
+
+
 !######################### subroutine sum_polynomials ###############################
 !####################################################################################
 subroutine sum_polynomials(pah,daughter1,daughter2,daughter3,ring_exists)
@@ -7,14 +36,16 @@ subroutine sum_polynomials(pah,daughter1,daughter2,daughter3,ring_exists)
 !
 !  ZZ(pah) = ZZ(daughter1) + ZZ(daughter2) + x * ZZ(daughter3)
 !
-    use types_module
-    use structure_module
-    implicit none
     type(structure), intent(inout) :: pah
     type(structure), intent(in) :: daughter1,daughter2,daughter3
     logical, intent(in) :: ring_exists
 
-    integer(kint) :: i
+    integer :: i
+
+
+    if ( pah%polynomial_computed ) then 
+        return
+    end if
 
 ! ###################################
 ! # initialize parent ZZ polynomial #
@@ -24,7 +55,14 @@ subroutine sum_polynomials(pah,daughter1,daughter2,daughter3,ring_exists)
     else
         pah%order=max0(daughter1%order,daughter2%order)
     end if
-    allocate(pah%polynomial(pah%order+1))
+!    if ( allocated(pah%polynomial) ) then
+!        if ( size(pah%polynomial) /= pah%order+1 ) then
+!            deallocate(pah%polynomial)
+!            allocate(pah%polynomial(pah%order+1))
+!        end if
+!    else 
+        allocate(pah%polynomial(pah%order+1))
+!    end if
     pah%polynomial=setvli(0_kint)
 
 ! #########################################################
@@ -49,6 +87,11 @@ subroutine sum_polynomials(pah,daughter1,daughter2,daughter3,ring_exists)
             pah%polynomial(i+2)=addvli(pah%polynomial(i+2),daughter3%polynomial(i+1))
         end do
     end if
+
+    call clean_polynomial(pah)
+
+    pah%polynomial_computed = .true.
+
     return
 
 end subroutine sum_polynomials
@@ -64,12 +107,13 @@ subroutine multiply_polynomials(pah,son1,son2)
 ! compute the ZZ polynomial of the parent structure pah 
 ! by multiplying the ZZ polynomial of the son structures: son1 & son2
 !
-    use types_module
-    use structure_module
-    implicit none
     type(structure), intent(inout) :: pah
     type(structure), intent(in) :: son1,son2
-    integer(kint) :: deg1,deg2,i,j
+    integer :: deg1,deg2,i,j
+
+    if ( pah%polynomial_computed ) then 
+        return
+    end if
 
 ! #####################################################################
 ! # find the highest non-vanishing power of the ZZ polynomial of son1 #
@@ -116,8 +160,26 @@ subroutine multiply_polynomials(pah,son1,son2)
             end do
         end do
     end if
+
+    pah%polynomial_computed = .true.
+    call clean_polynomial(pah)
+
     return
 
 end subroutine multiply_polynomials
 !####################################################################################
 !###################### end of subroutine multiply_polynomials ######################
+
+subroutine set_polynomial(pah, value)
+    type(structure), intent(inout) :: pah
+    integer(kint), intent(in) :: value
+    
+    pah%order = 0
+    allocate(pah%polynomial(1))
+    pah%polynomial(1)=setvli(value)
+    pah%polynomial_computed = .true.
+
+
+end subroutine
+
+end module

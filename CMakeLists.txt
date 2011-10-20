@@ -1,5 +1,5 @@
 # Project name is not mandatory, but you should use it
-project(ZZ_polynomial Fortran CXX)
+project(ZZ_polynomial Fortran)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -9,6 +9,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 cmake_minimum_required(VERSION 2.6)
 
 option(PROFILING "set profiling flags" OFF)
+option(USE_OPENMP "enable OpenMP" OFF)
 
 option(USE_MPI "Build parallel version with MPI library" OFF)
 
@@ -21,11 +22,11 @@ include(MacroOutOfSourceBuild)
  
 macro_ensure_out_of_source_build("${PROJECT_NAME} requires an out of source build.")
 
-find_package( Boost 1.34 COMPONENTS serialization REQUIRED )
+#find_package( Boost 1.34 COMPONENTS serialization REQUIRED )
 
 
 add_subdirectory(src)
-SET_TARGET_PROPERTIES(ZZ_polynomial PROPERTIES LINKER_LANGUAGE Fortran)
+#SET_TARGET_PROPERTIES(ZZ_polynomial PROPERTIES LINKER_LANGUAGE Fortran)
 
 enable_testing()
 add_subdirectory(test)
