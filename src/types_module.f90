@@ -5,7 +5,7 @@ module types_module
     integer, parameter :: kint = 8
     integer, parameter :: kreal = kind(0.0d0)
 
-    integer(kint), parameter :: desired_digits = 100
+    integer(kint), parameter :: desired_digits = 1000
 
     integer, parameter :: entry_power = (range(1_kint)+1)/2
     integer, parameter :: block_size = ceiling( real(desired_digits) / real(entry_power))
@@ -61,7 +61,7 @@ function addvli(a,b) result(c)
     end do
 
     if (c%tabl(block_size) >= block_max ) then
-        print*,"overflow in addvli, enlarge size of tabl"
+        print*,"overflow in addvli, increase [desired_digits]"
         stop
     end if
  
@@ -92,7 +92,7 @@ function multvli(a,b) result(c)
     end do
 
     if (c%tabl(block_size) >= block_max) then
-        print*,"overflow in multvli, enlarge size of tabl"
+        print*,"overflow in multvli, increase [desired_digits]"
         stop
     end if
 
@@ -126,10 +126,17 @@ subroutine print_vli_in_string(pos,string,val)
     integer(kint) :: i
     integer(kint), intent(inout) :: pos
     type(vlonginteger) :: val
-    character(len=500) :: string
+    character(len=2000) :: string
+    character(len=10) :: fmt1
 
     do i=val%leadpow, 1, -1
-        write(string(pos:),'(I0)') val%tabl(i)
+!        print*, i, val%tabl(i)
+        if (i == val%leadpow) then
+            write(string(pos:),'(I0)') val%tabl(i)
+        else
+            write(fmt1, '(a,i0,a,i0,a)') '(I0', entry_power, '.', entry_power, ')'
+            write(string(pos:),fmt1) val%tabl(i)
+        end if
         pos = pos + len(trim(string(pos:pos+entry_power)))
     end do
     return

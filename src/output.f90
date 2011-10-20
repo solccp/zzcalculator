@@ -177,25 +177,22 @@ contains
         character(len=*), intent(in) :: filename
         integer :: i
 
+
+
         open(unit=99, file=trim(filename))
-        call write_xyz_unit(pah, 99)
-        close(99) 
-    end subroutine
-
-    subroutine write_xyz_unit(pah, funit)
-        use types_module
-        use structure_module
-        type(structure), intent(in) :: pah
-        integer, intent(in) :: funit
-        integer :: i
-
-
-        write(funit, '(i0)') pah%nat
-        write(funit, *) ''
+        write(99, '(i0)') pah%nat
+        write(99, *) ''
         do i=1, pah%nat
-            write(funit, '(a, 3(2x, F12.6))') 'C', geom(:,pah%indexmapping(i))
+            write(99, '(a, 3(2x, F12.6))') 'C', geom(:,pah%indexmapping(i))
         end do
+
+        
+        close(99) 
+            
+
+
     end subroutine
+
 
 
 end module

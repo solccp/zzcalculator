@@ -13,7 +13,7 @@ subroutine print_ZZ_polynomial(pah)
     type(structure), intent(in) :: pah
     integer(kint) :: i,cpos
     type(vlonginteger) :: total
-    character(len=500) :: finalZZpolynomial
+    character(len=4000) :: finalZZpolynomial
 
 ! #########################
 ! # initialize the string #
@@ -80,7 +80,7 @@ subroutine print_int_in_string(pos,string,val)
     use structure_module
     implicit none
     integer(kint) :: val,pos
-    character(len=500) :: string
+    character(len=1000) :: string
     integer, parameter :: int_len = range(val)
 
     write(string(pos:),'(i0)')val

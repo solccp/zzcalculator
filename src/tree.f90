@@ -191,7 +191,6 @@ subroutine set_polynomial(pah, value)
     pah%order = 0
     allocate(pah%polynomial(1))
     pah%polynomial(1)=setvli(value)
-    pah%polynomial_computed = .true.
 end subroutine
 
 subroutine initialize(node)
@@ -205,7 +204,7 @@ subroutine initialize(node)
 end subroutine
 subroutine build_tree(pah_node, max_tree_size, reach_limit)
     
-    use hash_m
+
     use database_m
 
     type(tree_node), intent(inout), pointer :: pah_node
@@ -230,7 +229,6 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
 
     reach_limit = .false.
 
-!    call get_hash(pah_node%pah, pah_node%pah%hash_key) 
     call add_database_entry(pah_node, hit)
 
     outer: do
@@ -244,12 +242,6 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
             exit
         end if
 
-!        call get_polynomial(cur_node%pah, hit)
-!        if (hit) then
-!            print *, cur_node%pah%hash_key
-!            print *, 'hit'
-!            cycle
-!        end if
 
 
         if ( cur_node%hasChild ) then
@@ -278,8 +270,6 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                 else if ( bond%pah%nat < 6 ) then
                     call set_polynomial(bond%pah, 0_kint)
                 else
-                    
-!                    call get_hash(bond%pah, bond%pah%hash_key) 
                     call add_database_entry(bond, hit)
                 end if
                 cur_node%child_bond => bond
@@ -298,7 +288,6 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                 else if ( corners%pah%nat < 6 ) then
                     call set_polynomial(corners%pah, 0_kint)
                 else
-!                    call get_hash(corners%pah, corners%pah%hash_key) 
                     call add_database_entry(corners, hit)
                 end if
                 cur_node%child_corners => corners
@@ -317,7 +306,6 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                     else if ( ring%pah%nat < 6 ) then
                         call set_polynomial(ring%pah, 0_kint)
                     else
-!                        call get_hash(ring%pah, ring%pah%hash_key) 
                         call add_database_entry(ring, hit)
                     end if
                     cur_node%child_ring => ring
@@ -345,13 +333,11 @@ subroutine build_tree(pah_node, max_tree_size, reach_limit)
                     if ( bond%pah%nat == 0 ) then
                         call set_polynomial(bond%pah, 1_kint)
                     else
-!                        call get_hash(bond%pah, bond%pah%hash_key) 
                         call add_database_entry(bond, hit)
                     end if
                     if ( corners%pah%nat == 0 ) then
                         call set_polynomial(corners%pah, 1_kint)
                     else
-!                        call get_hash(corners%pah, corners%pah%hash_key) 
                         call add_database_entry(corners, hit)
                     end if
                     cur_node%child_son1 => bond

@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <vector>
 #include <assert.h>
-#include "fileio.h"
 using namespace std;
 
 class Graph
@@ -67,16 +66,5 @@ public:
    Vertex *getVertex(unsigned short label);
 
    // Load and save.
-   void load(FILE *fp);
-   void save(FILE *fp);
-
-   // Print.
-   void print(FILE *fp = stdout);
-   void print(char *label, FILE *fp = stdout);
-
-   // Dump graph in Graphviz "dot" format.
-   void dump(FILE *fp = stdout);
-   void dump(char *label, FILE *fp = stdout);
-   void dumpSub(FILE *fp = stdout);
 };
 #endif

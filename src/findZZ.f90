@@ -18,16 +18,18 @@ subroutine find_ZZ_polynomial(pah,level)
     logical :: hit
     
     integer, parameter :: min_nat_hash = 6
+    integer, parameter :: max_nat_hash = 60
 
-
-!    if ( pah%nat >= min_nat_hash ) then
-!        call get_hash(pah, pah%hash_key)
-!        call get_polynomial(pah, hit)
-!        if (hit) then
-!           print *, 'got a hit in database, nat=', pah%nat
-!            return
-!        end if
-!    end if
+    if ( .not. options%print_intermediate_structures) then
+        if ( pah%nat >= min_nat_hash .and. pah%nat <= max_nat_hash) then
+            call get_hash(pah, pah%hash_key)
+            call get_polynomial(pah, hit)
+            if (hit) then
+!               print *, 'got a hit in database, nat=', pah%nat
+                return
+            end if
+        end if
+    end if
 
     
 
@@ -75,9 +77,12 @@ subroutine find_ZZ_polynomial(pah,level)
         else
             call split_and_decompose(pah,medat,level)
         end if
-!        if ( pah%nat >= min_nat_hash .and. medat == 0) then
-!            call add_polynomial(pah)
-!        end if
+        pah%polynomial_computed = .true.
+        if ( .not. options%print_intermediate_structures) then
+            if ( pah%nat >= min_nat_hash .and. pah%nat <= max_nat_hash .and. medat == 0) then
+                call add_polynomial(pah)
+            end if
+        end if
     end if
 
     return

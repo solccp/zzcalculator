@@ -48,7 +48,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:n:v')
+        okey = getopt('Pfl:b:n:vd:')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -82,9 +82,9 @@ program zhang_polynomial
         if (okey == 'v') then
             options%verbose = .true.
         end if
-!        if(okey == 'd') then
-!            call load_database_from_file()
-!        end if
+        if(okey == 'd') then
+            call load_database_from_file()
+        end if
     end do
 
 
@@ -106,7 +106,7 @@ program zhang_polynomial
     
     level = 0
 
-    if ( .not. options%print_intermediate_structures ) then
+    if ( .false.) then !.not. options%print_intermediate_structures ) then
 
         allocate(root)
         root%pah => pah
@@ -155,10 +155,13 @@ program zhang_polynomial
     ! #############################################################
 
 
-!    call print_all_database_entry()
-!    call save_database_to_file()
-!    print *, 'db hit: ', stat_hit
-!    print *, 'db no_hit: ', stat_no_hit
+    call save_database_to_file()
+
+    if (options%verbose) then
+        print *, 'db hit: ', stat_hit
+        print *, 'db no_hit: ', stat_no_hit
+        call print_database()
+    end if
 
     call finalize_temp_space()
 

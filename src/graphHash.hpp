@@ -32,6 +32,7 @@
 #endif
 #include "graph.hpp"
 #include "md5.h"
+#include <cstring>
 using namespace std;
 
 class GraphHash
@@ -52,82 +53,104 @@ public:
 
    // Hash graph.
 #ifdef THREADS
-   bool hash(Graph *graph, int numThreads = 1, bool hashLabels = true);
+   bool hash(Graph *graph, int numThreads = 1,
+             bool hashLabels = true);
 
 #else
    bool hash(Graph *graph, bool hashLabels = true);
 #endif
 
-   // Print graph and its hash.
-   void print(FILE *fp = stdout);
+   // Get graph hash.
+   // Valid after graph hash.
+   // Hash size is MD5_SIZE bytes (see md5.h).
+   unsigned char *getHash();
 
-   // Dump graph and graph hash in Graphvis "dot" format.
-   void dump(FILE *fp = stdout);
 
    // Vertices.
    vector<Graph::Vertex *> vertices;
 
    // Less-than comparison of vertices by label.
-   static bool ltcmpVertices(Graph::Vertex *a, Graph::Vertex *b);
+   static bool ltcmpVertexLabels(Graph::Vertex *a, Graph::Vertex *b);
+
+   class VertexCoder;
+
+   // Vertex coder link.
+   class VertexCoderLink
+   {
+public:
+      Graph::Edge *edge;
+      VertexCoder *coder;
+      bool        creator;
+      VertexCoderLink();
+      VertexCoderLink(Graph::Edge *edge,
+                      VertexCoder *coder, bool creator);
+   };
 
    // Vertex coder.
    class VertexCoder
    {
 public:
-      Graph::Vertex         *vertex;
-      Graph::Edge           *parentEdge;
-      unsigned char         code[MD5_SIZE];
-      bool                  codeValid;
-      vector<VertexCoder *> children;
-      VertexCoder           *creator;
-      struct ltcmpConnection
+      Graph::Vertex             *vertex;
+      unsigned char             code[MD5_SIZE];
+      vector<VertexCoderLink *> children;
+      struct ltcmpVertices
       {
-         bool operator()(pair<Graph::Vertex *, Graph::Edge *> a,
-                         pair<Graph::Vertex *, Graph::Edge *> b) const
+         bool operator()(pair<Graph::Vertex *, bool> a,
+                         pair<Graph::Vertex *, bool> b) const
          {
             if (a.first < b.first) { return(true); }
-            if ((a.first == b.first) && (a.second < b.second)) { return(true); }
+            else if (a.first == b.first)
+            {
+               if (a.second && !b.second) { return(true); }
+            }
             return(false);
          }
       };
       VertexCoder();
-      VertexCoder(Graph::Vertex *vertex, Graph::Edge *parentEdge,
-                  VertexCoder *creator, int generation,
-                  map<pair<Graph::Vertex *, Graph::Edge *>,
-                      VertexCoder *, ltcmpConnection> *vertexMap = NULL);
+      VertexCoder(Graph::Vertex *vertex,
+                  bool halo, int generation,
+                  map<pair<Graph::Vertex *, bool>,
+                      VertexCoder *,
+                      ltcmpVertices> *vertexMap = NULL);
       ~VertexCoder();
 #ifdef THREADS
-      bool generateCode(int numThreads, bool hashLabels = true,
+      bool generateCode(int numThreads, bool hashLabels,
                         vector<int> *vertexList = NULL);
 #endif
-      bool generateCode(bool hashLabels = true, vector<int> *vertexList = NULL);
-      void printCode(FILE *fp = stdout);
-      void dump(FILE *fp = stdout);
+      bool generateCode(bool        hashLabels,
+                        vector<int> *vertexList = NULL);
 
 private:
 #ifdef THREADS
-      bool expandVertices(int threadNum, vector<int> *vertexList);
+      bool updateVertices(int threadNum, vector<int> *vertexList);
 
-      bool expandResult;
-      static void *expandThread(void *threadInfo);
+      bool updateResult;
+      static void *updateThread(void *threadInfo);
 
 #else
-      bool expandVertices(vector<int> *vertexList);
+      bool updateVertices(vector<int> *vertexList);
 #endif
       bool expanded;
+      bool halo;
       int  generation;
+      bool codeValid;
       bool expand();
-
-      map<pair<Graph::Vertex *, Graph::Edge *>,
-          VertexCoder *, ltcmpConnection> *vertexMap;
-      static bool ltcmpCode(VertexCoder *a, VertexCoder *b);
+      bool expand(Graph::Vertex *childVertex,
+                  Graph::Edge *, bool halo);
       void purgeChildren();
+      void sortEdges(vector<Graph::Edge *>&,
+                     Graph::Vertex *, bool hashLabels);
+
+      map<pair<Graph::Vertex *, bool>,
+          VertexCoder *, ltcmpVertices> *vertexMap;
+
+      static bool ltcmpCodes(VertexCoderLink *a, VertexCoderLink *b);
 
 #ifdef THREADS
       int               numThreads;
       bool              terminate;
-      pthread_barrier_t expandBarrier;
-      pthread_mutex_t   expandMutex;
+      pthread_barrier_t updateBarrier;
+      pthread_mutex_t   updateMutex;
       pthread_t         *threads;
       struct ThreadInfo
       {

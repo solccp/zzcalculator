@@ -8,7 +8,7 @@ module hash_m
 contains
 
 subroutine get_hash(pah, key)
-    type(structure), intent(in) :: pah
+    type(structure), intent(inout) :: pah
     character(len=32), intent(out) :: key
     
     integer :: i, j
@@ -42,6 +42,7 @@ subroutine get_hash(pah, key)
     end do
 
     call make_hash(pah%nat, numEdges, edges, key)
+    pah%hash_computed = .true.
 !    print *, 'hash: ', key
 
     deallocate(edges)
@@ -77,10 +78,10 @@ subroutine get_polynomial(pah, hit)
 
 end subroutine
 
-subroutine add_polynomial(pah)
-    use types_module
-    type(structure), intent(in) :: pah
-    integer :: i,j
+!subroutine add_polynomial(pah)
+!    use types_module
+!    type(structure), intent(in) :: pah
+!    integer :: i,j
     
 !    call print_ZZ_polynomial(pah)
     
@@ -94,10 +95,50 @@ subroutine add_polynomial(pah)
 !    end do
 
 !    print *, '=============add========='
-    call add_polynomial_kernel(pah%hash_key, pah%order+1, block_size, pah%polynomial)
+!    call add_polynomial_kernel(pah%hash_key, pah%order+1, block_size, pah%polynomial)
 
 !    print *, 'add done'
     
+!end subroutine
+
+
+subroutine add_polynomial(pah)
+    type(structure), intent(in) :: pah
+    integer :: i, j
+    integer :: numEdges
+    integer, dimension(:,:), allocatable :: edges
+
+    if (.not. pah%polynomial_computed) then
+        print *, 'polynomial not computed yet error'
+        stop
+    end if
+
+    numEdges = 0
+    do i = 1, pah%nat
+        do j = 1, pah%neighbornumber(i)
+            if ( pah%neighborlist(i, j) > i ) then
+                numEdges = numEdges + 1
+            end if
+        end do
+    end do
+
+    allocate(edges(2,numEdges))
+    numEdges = 0
+    do i = 1, pah%nat
+        do j = 1, pah%neighbornumber(i)
+            if ( pah%neighborlist(i, j) > i ) then
+                numEdges = numEdges + 1
+                edges(1, numEdges) = i
+                edges(2, numEdges) = pah%neighborlist(i, j)
+            end if
+        end do
+    end do
+
+    call add_polynomial_kernel_new(pah%nat, numEdges, edges, pah%order+1, block_size, pah%polynomial)
+
+    deallocate(edges)
 end subroutine
+
+
 
 end module
