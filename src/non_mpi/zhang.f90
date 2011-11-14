@@ -56,7 +56,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:n:vtp:')
+        okey = getopt('Pfl:b:n:vtp:c:')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -101,6 +101,12 @@ program zhang_polynomial
             call init_decompose_print('substructures.cml', i)
         end if
 
+        if (okey == 'c') then
+            read(optarg, '(a)') dummy
+            options%use_connection_file = .true.
+            options%connection_file = trim(dummy)
+        end if
+
 !        if(okey == 'd') then
 !            read(optarg, '(a)') dummy
 !            call load_database_from_file(len(trim(dummy)), dummy)
@@ -127,6 +133,7 @@ program zhang_polynomial
     if ( options%has_bondlistfile .and. options%verbose ) then
         print *, 'bondlist file: ', trim(options%bondlistfile)
     end if
+
     call read_input(input_fname, pah)
     call cut_dangling_bonds(pah)
 

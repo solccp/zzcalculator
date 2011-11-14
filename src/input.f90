@@ -80,19 +80,53 @@ subroutine read_input(input_fname,pah)
         allocate(pah%ringlist(6,pah%nat))
     end if
 
-    ! #######################
-    ! # find neighbor table #
-    ! #######################
-    do i=1, cnat
-        do j=i+1, cnat
-            if (dist(cnat,i,j,geom) < ccdist) then
-                pah%neighbornumber(i)=pah%neighbornumber(i)+1
-                pah%neighborlist(i,pah%neighbornumber(i))=j
-                pah%neighbornumber(j)=pah%neighbornumber(j)+1
-                pah%neighborlist(j,pah%neighbornumber(j))=i
+
+    bondfileexists = .false.
+    if ( options%use_connection_file) then
+        !use connection file
+        open(unit=99, file=trim(options%connection_file))
+        do
+            read(99,*,iostat=errorcode) a1, a2
+            if ( errorcode /= 0 ) then
+                exit
             end if
+            bondfileexists = .true.
+            if ( a1 > bnat ) then
+                write(*,'(a,i0,a)') "Atom index ", a1, " is greater than the number of atoms, check your connection file"
+                stop
+            end if
+   
+            if ( map(a1) == 0 .or. map(a2) == 0 ) then
+                cycle
+            end if 
+            if (pah%neighbornumber(map(a1)) == 3) then
+                write(*,'(a,i0,a)') "Atom # ", a1, " has too many neighbors, check your connection file"
+                stop
+            end if
+            pah%neighbornumber(map(a1))=pah%neighbornumber(map(a1))+1
+            pah%neighborlist(map(a1),pah%neighbornumber(map(a1)))=map(a2)        
+            pah%neighbornumber(map(a2))=pah%neighbornumber(map(a2))+1
+            pah%neighborlist(map(a2),pah%neighbornumber(map(a2)))=map(a1)        
+        end do  
+        close(99)
+    end if
+
+
+    if (.not. bondfileexists ) then
+    ! #######################
+        ! # find neighbor table #
+        ! #######################
+        do i=1, cnat
+            do j=i+1, cnat
+                if (dist(cnat,i,j,geom) < ccdist) then
+                    pah%neighbornumber(i)=pah%neighbornumber(i)+1
+                    pah%neighborlist(i,pah%neighbornumber(i))=j
+                    pah%neighbornumber(j)=pah%neighbornumber(j)+1
+                    pah%neighborlist(j,pah%neighbornumber(j))=i
+                end if
+            end do
         end do
-    end do
+    end if
 
     ! ####################################################
     ! # read (if provided) the preferred partition order #
@@ -101,7 +135,7 @@ subroutine read_input(input_fname,pah)
     if (options%has_bondlistfile) then
         inquire(file=trim(options%bondlistfile),exist=bondfileexists)
         if (bondfileexists) then
-            allocate(localbondlist(2,cnat))
+            allocate(localbondlist(2,3*cnat/2))
             open(21,file=trim(options%bondlistfile))
             do
                 read(21,*,iostat=errorcode) a1,a2
