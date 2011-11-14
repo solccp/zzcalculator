@@ -5,6 +5,8 @@ module input_m
     use options_m
     use utils_m
     use operator_m
+    use partition_m
+ 
     implicit none
 
     real(kreal), allocatable, dimension(:,:), save :: ori_geom
@@ -128,6 +130,10 @@ subroutine read_input(input_fname,pah)
         end do
     end if
 
+
+
+
+
     ! ####################################################
     ! # read (if provided) the preferred partition order #
     ! ####################################################
@@ -164,6 +170,12 @@ subroutine read_input(input_fname,pah)
             call clean_bond_list(pah)
         end if
     end if
+!#### test
+
+    if (pah%nbondlistentries == 0) then
+        call bipartition(pah)
+    end if
+
 
 !    call print_bondlist(pah)
     ! #########################################################

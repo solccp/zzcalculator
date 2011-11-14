@@ -1,3 +1,4 @@
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
  
 file(GLOB ZZ_polynomial_SOURCES *.f90 *.f95)
@@ -27,12 +28,12 @@ endif()
 if( "${CMAKE_Fortran_COMPILER_ID}" MATCHES "Intel" )
     if (CMAKE_BUILD_TYPE STREQUAL Debug)
         set(CMAKE_Fortran_FLAGS_DEBUG "")
-        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc")
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc -mkl")
         set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-O0 -g3 -trace -debug all -check all")
     endif (CMAKE_BUILD_TYPE STREQUAL Debug)
     
     if (CMAKE_BUILD_TYPE STREQUAL Release)
-        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc -ipo")
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc -ipo -mkl")
         set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-ipo -O3 -funroll-loops -no-prec-div")
         if(USE_OPENMP STREQUAL YES)
             GET_TARGET_PROPERTY(COMFLAGS ZZ_polynomial COMPILE_FLAGS)
