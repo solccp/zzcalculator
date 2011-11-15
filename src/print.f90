@@ -10,11 +10,17 @@ subroutine print_ZZ_polynomial(pah)
     use accuracy_m
     use structure_m
     use big_integer_m
+    use options_m
     implicit none
     type(structure), intent(in) :: pah
     integer :: i,cpos
     type(big_integer) :: total
-    character(len=4000) :: finalZZpolynomial
+    character(len=40000) :: finalZZpolynomial
+
+
+    if ( options%verbose ) then
+        write(*, '(1x,a)') 'Final ZZ_polynomial:'
+    end if
 
 ! #########################
 ! # initialize the string #

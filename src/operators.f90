@@ -1,10 +1,71 @@
 module operator_m
 
-    public :: check_if_connected, clean_bond_list, select_edge_bond, find_edge_ring, create_nobond_daughter, create_noatoms_daughter
-    public :: cut_dangling_bonds, split_structure
+    public :: check_if_connected, select_edge_bond, find_edge_ring, create_nobond_daughter, create_noatoms_daughter
+    public :: cut_dangling_bonds, split_structure, clean_bond_list
     private
 
 contains
+!########################## subroutine clean_bond_list ##############################
+!####################################################################################
+subroutine clean_bond_list(pah)
+!
+! clean the list of bonds by removing not longer
+! valid entries, i.e. not existing atoms & not existing bonds
+!
+    use structure_m
+    use utils_m
+    implicit none
+    type(structure), intent(inout) :: pah
+    
+    integer :: i,j
+    integer, allocatable, dimension(:,:) :: bl
+!    logical :: are_neighbors
+
+    if (pah%nbondlistentries > 0) then
+!        print *, 'before clean bondlist'
+!        call print_bondlist(pah)
+        allocate(bl(2,pah%nbondlistentries))
+        bl = 0
+        j = 0
+        do i = 1, pah%nbondlistentries
+            if (pah%bondlist(1,i) /= 0 .and. pah%bondlist(1,i)<=pah%nat) then
+                if (pah%bondlist(2,i) /= 0 .and. pah%bondlist(2,i)<=pah%nat) then
+                    if (are_neighbors(pah,pah%bondlist(1,i),pah%bondlist(2,i))) then
+                        j = j + 1
+                        bl(1,j) = pah%bondlist(1,i)
+                        bl(2,j) = pah%bondlist(2,i)
+                    end if
+                end if
+            end if
+        end do
+        pah%nbondlistentries = j
+
+        if (pah%nbondlistentries == 0) then
+            deallocate(pah%bondlist)
+            deallocate(bl)
+        else
+            deallocate(pah%bondlist)
+            allocate(pah%bondlist(2,pah%nbondlistentries))
+            pah%bondlist = bl(:,1:pah%nbondlistentries)
+            deallocate(bl)
+        end if
+    end if
+
+!    if (pah%nbondlistentries > 0) then
+!        print *, 'after clean bondlist'
+!        call print_bondlist(pah)
+!    end if
+
+    return
+
+! #################################################
+! # try to select the bond from the provided list #
+! #################################################
+
+
+end subroutine clean_bond_list
+!####################################################################################
+!####################### end of subroutine clean_bond_list ##########################
 
 !##################### subroutine create_nobond_daughter ############################
 !####################################################################################
@@ -675,7 +736,7 @@ subroutine select_edge_bond(pah,atom1,atom2)
 !
     use structure_m
     implicit none
-    type(structure), intent(in) :: pah
+    type(structure), intent(inout) :: pah
     integer, intent(out) :: atom1, atom2
     
     integer :: i,j,atom3,sextet(6)
@@ -752,67 +813,6 @@ end subroutine select_edge_bond
 
 
 
-!########################## subroutine clean_bond_list ##############################
-!####################################################################################
-subroutine clean_bond_list(pah)
-!
-! clean the list of bonds by removing not longer
-! valid entries, i.e. not existing atoms & not existing bonds
-!
-    use structure_m
-    use utils_m
-    implicit none
-    type(structure), intent(inout) :: pah
-    
-    integer :: i,j
-    integer, allocatable, dimension(:,:) :: bl
-!    logical :: are_neighbors
-
-    if (pah%nbondlistentries > 0) then
-!        print *, 'before clean bondlist'
-!        call print_bondlist(pah)
-        allocate(bl(2,pah%nbondlistentries))
-        bl = 0
-        j = 0
-        do i = 1, pah%nbondlistentries
-            if (pah%bondlist(1,i) /= 0 .and. pah%bondlist(1,i)<=pah%nat) then
-                if (pah%bondlist(2,i) /= 0 .and. pah%bondlist(2,i)<=pah%nat) then
-                    if (are_neighbors(pah,pah%bondlist(1,i),pah%bondlist(2,i))) then
-                        j = j + 1
-                        bl(1,j) = pah%bondlist(1,i)
-                        bl(2,j) = pah%bondlist(2,i)
-                    end if
-                end if
-            end if
-        end do
-        pah%nbondlistentries = j
-
-        if (pah%nbondlistentries == 0) then
-            deallocate(pah%bondlist)
-            deallocate(bl)
-        else
-            deallocate(pah%bondlist)
-            allocate(pah%bondlist(2,pah%nbondlistentries))
-            pah%bondlist = bl(:,1:pah%nbondlistentries)
-            deallocate(bl)
-        end if
-    end if
-
-!    if (pah%nbondlistentries > 0) then
-!        print *, 'after clean bondlist'
-!        call print_bondlist(pah)
-!    end if
-
-    return
-
-! #################################################
-! # try to select the bond from the provided list #
-! #################################################
-
-
-end subroutine clean_bond_list
-!####################################################################################
-!####################### end of subroutine clean_bond_list ##########################
 
 !######################## subroutine find_aromatic_sextet ###########################
 !####################################################################################

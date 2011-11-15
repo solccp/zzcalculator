@@ -5,11 +5,10 @@ module input_m
     use options_m
     use utils_m
     use operator_m
-    use partition_m
  
     implicit none
 
-    real(kreal), allocatable, dimension(:,:), save :: ori_geom
+    real(kreal), allocatable, dimension(:,:), save, target :: ori_geom
 
 contains
 
@@ -20,6 +19,7 @@ subroutine read_input(input_fname,pah)
 ! read the geometry of a polycyclic benzenoid structure pah from the file 'geometry',
 ! filter out only the carbon atoms, and create the topological matrix for it
 !
+    use bondlist_m
     character(len=*), intent(in) :: input_fname
     type(structure), intent(inout) :: pah
 
@@ -172,8 +172,8 @@ subroutine read_input(input_fname,pah)
     end if
 !#### test
 
-    if (pah%nbondlistentries == 0) then
-        call bipartition(pah)
+    if (pah%nbondlistentries == 0 .and. pah%nat > 70) then
+        call build_bondlist(pah, ori_geom, map)
     end if
 
 
