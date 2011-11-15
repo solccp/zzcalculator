@@ -56,7 +56,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:n:vtp:c:')
+        okey = getopt('Pfl:b:n:vtp:c:B')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -105,6 +105,10 @@ program zhang_polynomial
             read(optarg, '(a)') dummy
             options%use_connection_file = .true.
             options%connection_file = trim(dummy)
+        end if
+
+        if (okey == 'B') then
+            options%use_bipartition = .true.
         end if
 
 !        if(okey == 'd') then

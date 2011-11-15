@@ -60,14 +60,14 @@ function index_a(array, item) result(res)
     end do
 end function
 
-subroutine bipartition(pah, bondlist, nlist, vex_g1, len_g1, vex_g2, len_g2)
+subroutine bipartition(pah, bondlist, nlist, vex_g1, len_g1, vex_g2, len_g2, succ)
     use lapack
     implicit none
     type(structure), intent(in) :: pah
 
     integer, intent(inout), dimension(:,:) :: bondlist
     integer, intent(out) :: nlist
-
+    logical, intent(out) :: succ
 
     integer, intent(inout), dimension(:) :: vex_g1, vex_g2
     integer, intent(out) :: len_g1, len_g2
@@ -95,48 +95,52 @@ subroutine bipartition(pah, bondlist, nlist, vex_g1, len_g1, vex_g2, len_g2)
     end do
 
     call syev('V', 'L', nver, LP_mat, nver, ev)
-    g1 = .false.
-    g2 = .false.
-    do i = 1, nver
-        if (LP_mat(i,2)> 0) then
-            g1(i) = .true.
-        else
-            g2(i) = .true.
-        end if
-    end do
-
-    k = 0
-    do i = 1, nver
-        do j = 1, pah%neighbornumber(i)
-            tmp = pah%neighborlist(i, j)
-            if ( g1(i) == .true. .and. g2(tmp) == .true. ) then
-                k = k + 1
-                bondlist(1, k) = i
-                bondlist(2, k) = tmp
+    if ( abs(ev(2)) < 1.0d-12 ) then
+        succ = .false.
+    else
+        succ = .true.
+        g1 = .false.
+        g2 = .false.
+        do i = 1, nver
+            if (LP_mat(i,2)> 0) then
+                g1(i) = .true.
+            else
+                g2(i) = .true.
             end if
-        end do      
-    end do
-    nlist = k
+        end do
 
-    !sort!
-    call sort(pah, bondlist, nlist)
+        k = 0
+        do i = 1, nver
+            do j = 1, pah%neighbornumber(i)
+                tmp = pah%neighborlist(i, j)
+                if ( g1(i) == .true. .and. g2(tmp) == .true. ) then
+                    k = k + 1
+                    bondlist(1, k) = i
+                    bondlist(2, k) = tmp
+                end if
+            end do      
+        end do
+        nlist = k
 
-    k = 0
-    j = 0
-    do i = 1, nver
-        if ( g1(i) == .true. ) then
-            j = j + 1
-            vex_g1(j) = i
-        else if ( g2(i) == .true. ) then
-            k = k + 1
-            vex_g2(k) = i
-        end if
-    end do
+        !sort!
+        call sort(pah, bondlist, nlist)
+
+        k = 0
+        j = 0
+        do i = 1, nver
+            if ( g1(i) == .true. ) then
+                j = j + 1
+                vex_g1(j) = i
+            else if ( g2(i) == .true. ) then
+                k = k + 1
+                vex_g2(k) = i
+            end if
+        end do
 
 
-    len_g1 = j
-    len_g2 = k
-
+        len_g1 = j
+        len_g2 = k
+    end if
 
     
     deallocate(LP_mat)
@@ -167,7 +171,7 @@ subroutine build_bondlist(pah, geom, map)
     type(structure), pointer :: pah_ptr, cur_pah
     
     integer :: queue_index
-    logical :: first
+    logical :: first, succ
 
 
     mod_geom => geom
@@ -186,8 +190,10 @@ subroutine build_bondlist(pah, geom, map)
         cur_pah => queue(queue_index)%ptr
         queue_index = queue_index -1
 
-        call bipartition(cur_pah, bondlist(:,nlist_total+1:), nlist, vex_g1, len_g1, vex_g2, len_g2)
-   
+        call bipartition(cur_pah, bondlist(:,nlist_total+1:), nlist, vex_g1, len_g1, vex_g2, len_g2, succ)
+        if ( succ == .false. ) then
+            exit
+        end if
         do i = nlist_total+1, nlist_total + nlist
             bondlist(:, i) = map(cur_pah%indexmapping(bondlist(:, i)))
         end do

@@ -13,6 +13,7 @@ module options_m
         logical :: testrun
         logical :: use_connection_file
         character(len=100) :: connection_file
+        logical :: use_bipartition
 
 !        logical :: use_database
 !        logical :: create_database
@@ -31,6 +32,7 @@ contains
         options%testrun = .false.               
         options%decompose_print = .false.
         options%use_connection_file = .false.
+        options%use_bipartition = .false.
 !        options%use_database = .false.
 !        options%create_database = .false.
     end subroutine

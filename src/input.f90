@@ -172,8 +172,10 @@ subroutine read_input(input_fname,pah)
     end if
 !#### test
 
-    if (pah%nbondlistentries == 0 .and. pah%nat > 70) then
-        call build_bondlist(pah, ori_geom, map)
+    if (options%use_bipartition) then
+        if (pah%nbondlistentries == 0 .and. pah%nat > 70) then
+            call build_bondlist(pah, ori_geom, map)
+        end if
     end if
 
 
