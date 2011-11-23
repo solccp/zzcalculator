@@ -214,7 +214,7 @@ subroutine build_bondlist(pah, geom, map)
         allocate(pah_ptr)
         call create_noatoms_daughter(cur_pah, pah_ptr, len_g2, vex_g2, .false.) 
 !        call cut_dangling_bonds(pah_ptr)
-        if ( pah_ptr%nat > 50 ) then
+        if ( pah_ptr%nat > 30 ) then
             queue_index = queue_index + 1
             queue(queue_index)%ptr => pah_ptr
         else
