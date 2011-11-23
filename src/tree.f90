@@ -219,7 +219,10 @@ outer: do
             if ( medat == 0 ) then
 
                 call select_edge_bond(cur_node%pah,atom1,atom2)
-                call find_edge_ring(cur_node%pah,sextet,atom1,atom2,ring_exists)
+                ring_exists = .false.
+                if ( .not. options%kekule_only ) then
+                    call find_edge_ring(cur_node%pah,sextet,atom1,atom2,ring_exists)
+                end if
        
                 allocate(bond)
                 call initialize(bond)

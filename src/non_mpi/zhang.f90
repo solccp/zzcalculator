@@ -56,7 +56,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:n:vtp:c:B')
+        okey = getopt('Pfl:b:n:vtp:c:BK')
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -109,6 +109,10 @@ program zhang_polynomial
 
         if (okey == 'B') then
             options%use_bipartition = .true.
+        end if
+
+        if (okey == 'K') then
+            options%kekule_only = .true.
         end if
 
 !        if(okey == 'd') then

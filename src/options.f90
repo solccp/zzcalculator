@@ -14,7 +14,7 @@ module options_m
         logical :: use_connection_file
         character(len=100) :: connection_file
         logical :: use_bipartition
-
+        logical :: kekule_only
 !        logical :: use_database
 !        logical :: create_database
 !        character(len=80) :: databasefile
@@ -33,6 +33,7 @@ contains
         options%decompose_print = .false.
         options%use_connection_file = .false.
         options%use_bipartition = .false.
+        options%kekule_only = .false.
 !        options%use_database = .false.
 !        options%create_database = .false.
     end subroutine

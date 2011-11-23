@@ -5,6 +5,7 @@ module decompose_m
     use operator_m
     use polynomial_m
     use output_m
+    use options_m
     implicit none
     
 contains
@@ -29,15 +30,12 @@ subroutine decompose(pah, level)
     logical :: ring_exists, are_neighbors
     
 
+    ring_exists = .false.
 ! #############################################
 ! # select an edge bond between atom1 & atom2 #
 ! #############################################
     call select_edge_bond(pah, atom1, atom2)
 
-! ##########################################
-! # find the ring containing atom1 & atom2 #
-! ##########################################
-    call find_edge_ring(pah, sextet, atom1, atom2, ring_exists)
 
 ! ##################################
 ! # create the daughter structures #
@@ -47,19 +45,14 @@ subroutine decompose(pah, level)
     atoms(1) = atom1
     atoms(2) = atom2
     call create_noatoms_daughter(pah, corners, nelim, atoms, .false. )
-    if (ring_exists) then
-        nelim = 6
-        call create_noatoms_daughter(pah, ring, nelim, sextet, .true. )
-    end if
+
 
 ! ###################################################
 ! # eliminate dangling bonds in daughter structures #
 ! ###################################################
     call cut_dangling_bonds(bond)
     call cut_dangling_bonds(corners)
-    if (ring_exists) then
-        call cut_dangling_bonds(ring)
-    end if
+
 
     
 ! ###############################################
@@ -67,10 +60,19 @@ subroutine decompose(pah, level)
 ! ###############################################
     call find_ZZ_polynomial(bond, level+1)
     call find_ZZ_polynomial(corners, level+1)
-    if (ring_exists) then
-        call find_ZZ_polynomial(ring, level+1)
-    end if
 
+! ##########################################
+! # find the ring containing atom1 & atom2 #
+! ##########################################
+    if ( .not. options%kekule_only ) then
+        call find_edge_ring(pah, sextet, atom1, atom2, ring_exists)
+        if (ring_exists) then
+            nelim = 6
+            call create_noatoms_daughter(pah, ring, nelim, sextet, .true. )
+            call cut_dangling_bonds(ring)
+            call find_ZZ_polynomial(ring, level+1)
+        end if
+    end if
 
 ! ###############################################
 ! # find ZZ polynomial for the parent structure #
