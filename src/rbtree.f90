@@ -107,9 +107,11 @@ recursive subroutine print_tree(node, level)
     integer :: level 
     if ( .not. isLeaf(node) ) then
         if ( node%red ) then
-            write (*,'(i0,1x,a,1x,i0,1x,i0)') node%keyvalue%ckey%key1, 'RED', node%left%keyvalue%ckey%key1, node%right%keyvalue%ckey%key1
+            write (*,'(i0,1x,a,1x,i0,1x,i0)') node%keyvalue%ckey%key1, 'RED', &
+            node%left%keyvalue%ckey%key1, node%right%keyvalue%ckey%key1
         else
-            write (*,'(i0,1x,a,1x,i0,1x,i0)') node%keyvalue%ckey%key1, 'BLK', node%left%keyvalue%ckey%key1, node%right%keyvalue%ckey%key1
+            write (*,'(i0,1x,a,1x,i0,1x,i0)') node%keyvalue%ckey%key1, 'BLK', &
+            node%left%keyvalue%ckey%key1, node%right%keyvalue%ckey%key1
         end if
         if (.not. isLeaf(node%left)) then
             if ( .not. associated(node%left%parent, node) ) then

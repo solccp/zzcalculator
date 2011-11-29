@@ -113,7 +113,7 @@ subroutine bipartition(pah, bondlist, nlist, vex_g1, len_g1, vex_g2, len_g2, suc
         do i = 1, nver
             do j = 1, pah%neighbornumber(i)
                 tmp = pah%neighborlist(i, j)
-                if ( g1(i) == .true. .and. g2(tmp) == .true. ) then
+                if ( g1(i) .and. g2(tmp) ) then
                     k = k + 1
                     bondlist(1, k) = i
                     bondlist(2, k) = tmp
@@ -128,10 +128,10 @@ subroutine bipartition(pah, bondlist, nlist, vex_g1, len_g1, vex_g2, len_g2, suc
         k = 0
         j = 0
         do i = 1, nver
-            if ( g1(i) == .true. ) then
+            if ( g1(i) ) then
                 j = j + 1
                 vex_g1(j) = i
-            else if ( g2(i) == .true. ) then
+            else if ( g2(i) ) then
                 k = k + 1
                 vex_g2(k) = i
             end if
@@ -191,7 +191,7 @@ subroutine build_bondlist(pah, geom, map)
         queue_index = queue_index -1
 
         call bipartition(cur_pah, bondlist(:,nlist_total+1:), nlist, vex_g1, len_g1, vex_g2, len_g2, succ)
-        if ( succ == .false. ) then
+        if ( .not. succ ) then
             exit
         end if
         do i = nlist_total+1, nlist_total + nlist

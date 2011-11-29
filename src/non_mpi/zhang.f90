@@ -1,3 +1,14 @@
+
+subroutine print_usage()
+    write(*, '(1x,a)') "Usage: ZZ_polynomial input.xyz"
+    write(*, '(1x,a)') "Options:"
+    write(*, '(1x,10a)') "    ", "-K", "                 ",  "Compute the number of Kekule structures only"
+    write(*, '(1x,10a)') "    ", "-B", "                 ",  "Enable built-in bondlist generator"
+    write(*, '(1x,10a)') "    ", "-b file", "            ",  "Load user defined bondlist file"
+    write(*, '(1x,10a)') "    ", "-n [number]", "        ",  "The number of pretreatment substructures"
+    
+end subroutine
+
 !######################### program zhang_polynomial #################################
 !####################################################################################
 program zhang_polynomial
@@ -50,7 +61,8 @@ program zhang_polynomial
     argc = command_argument_count()
 
     if (argc < 1) then
-        stop 'abnormal termination: wrong arguments'
+        call print_usage()
+        stop
     end if
 
     call initialize_options()

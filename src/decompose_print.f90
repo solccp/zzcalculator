@@ -247,8 +247,10 @@ contains
             path(level+1:level+1) = '2'
             call print_structures(node%child_son2, level+1, path)
         end if
-        if ( .not. associated(node%child_bond) .and. .not. associated(node%child_corners) .and. &
-             .not. associated(node%child_ring) .and. .not. associated(node%child_son1) .and. .not. associated(node%child_son2) ) then
+        if ( .not. associated(node%child_bond) .and. .not. & 
+                associated(node%child_corners) .and. &
+             .not. associated(node%child_ring) .and. .not. &
+                associated(node%child_son1) .and. .not. associated(node%child_son2) ) then
 
             print *, node%pah%nat
             call write_cml_unit(node%pah, unitnum, path)
@@ -284,14 +286,18 @@ contains
                 if ( pah%neighbornumber(i) == 0 ) then
                     cycle
                 end if
-                write(unitnum, '(6x,a,i0,a,F20.12,a,F20.12,a,F20.12,a)') '<atom id="a', pah%indexmapping(i),'" elementType="C" x3="', &
-                ori_geom(1,pah%indexmapping(i)),'" y3="',ori_geom(2,pah%indexmapping(i)),'" z3="',ori_geom(3,pah%indexmapping(i)), '"/>'
+                write(unitnum, '(6x,a,i0,a,F20.12,a,F20.12,a,F20.12,a)') &
+                '<atom id="a', pah%indexmapping(i),'" elementType="C" x3="', &
+                ori_geom(1,pah%indexmapping(i)),'" y3="', &
+                ori_geom(2,pah%indexmapping(i)),'" z3="', &
+                ori_geom(3,pah%indexmapping(i)), '"/>'
             end do
             write(unitnum, '(4x,a)') '</atomArray>'
             write(unitnum, '(4x,a)') '<bondArray>'
             do i=1, pah%nat
                 do j = 1, pah%neighbornumber(i)
-                    write(unitnum, '(6x,a,i0,a,i0,a)') '<bond atomRefs2="a', pah%indexmapping(i),' a', pah%indexmapping(pah%neighborlist(i,j)),'" order="1"/>'
+                    write(unitnum, '(6x,a,i0,a,i0,a)') '<bond atomRefs2="a', &
+                    pah%indexmapping(i),' a', pah%indexmapping(pah%neighborlist(i,j)),'" order="1"/>'
                 end do
             end do
             write(unitnum, '(4x,a)') '</bondArray>'
