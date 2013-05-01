@@ -135,7 +135,7 @@ program zhang_polynomial
 
 #ifdef USE_OPENMP
     if (.not. thread_set ) then
-        max_threads = OMP_GET_MAX_THREADS()
+        nthreads = OMP_GET_MAX_THREADS()
         if (nthreads > 1) then
             call omp_set_num_threads(nthreads-1)
         end if       
