@@ -3,39 +3,25 @@ module options_m
     save
 
     type :: options_t
-        logical :: print_intermediate_structures
-        logical :: force_print_structures
-        integer :: print_order
         character(len=100) :: bondlistfile
         logical :: has_bondlistfile
-        logical :: verbose 
-        logical :: decompose_print
-        logical :: testrun
-        logical :: use_connection_file
-        character(len=100) :: connection_file
+        logical :: verbose
         logical :: use_bipartition
         logical :: kekule_only
-!        logical :: use_database
-!        logical :: create_database
-!        character(len=80) :: databasefile
+		logical :: read_connection_table
+		logical :: simple_printing
 
     end type
 
-    type(options_t) :: options    
+    type(options_t) :: options
 contains
     subroutine initialize_options()
-        options%print_intermediate_structures = .false.
-        options%print_order = 0
         options%has_bondlistfile = .false.
-        options%force_print_structures = .false.
         options%verbose = .false.
-        options%testrun = .false.               
-        options%decompose_print = .false.
-        options%use_connection_file = .false.
         options%use_bipartition = .false.
         options%kekule_only = .false.
-!        options%use_database = .false.
-!        options%create_database = .false.
+        options%read_connection_table = .false.
+        options%simple_printing = .false.
     end subroutine
 
 end module

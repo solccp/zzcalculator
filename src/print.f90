@@ -74,6 +74,84 @@ subroutine print_ZZ_polynomial(pah)
 end subroutine print_ZZ_polynomial
 !####################################################################################
 !################### end of subroutine print_ZZ_polynomial ##########################
+subroutine print_ZZ_polynomial_simple(pah)
+    use accuracy_m
+    use structure_m
+    use big_integer_m
+    use options_m
+    implicit none
+    type(structure), intent(in) :: pah
+    integer :: i,cpos
+    type(big_integer) :: total
+    character(len=40000) :: finalZZpolynomial
+
+
+! #########################
+! # initialize the string #
+! #########################
+
+
+    total = setvli(0_kint)
+
+    do i = 0, pah%order
+        finalZZpolynomial = ''
+        cpos = 1
+        call print_vli_in_string(cpos,finalZZpolynomial,pah%polynomial(i+1))
+        write(*,'(i0,1x,a)') i, trim(finalZZpolynomial)
+        total = addvli(total,pah%polynomial(i+1))
+    end do
+
+    finalZZpolynomial=''
+    cpos = 1
+    call print_vli_in_string(cpos,finalZZpolynomial,total)
+    write(*,'(2a)')"t:",trim(finalZZpolynomial)
+
+    return
+
+end subroutine print_ZZ_polynomial_simple
+subroutine print_ZZ_polynomial_XML(pah)
+
+    use accuracy_m
+    use structure_m
+    use big_integer_m
+    use options_m
+    implicit none
+    type(structure), intent(in) :: pah
+    integer :: i,cpos
+    type(big_integer) :: total
+    character(len=40000) :: finalZZpolynomial
+
+
+! #########################
+! # initialize the string #
+! #########################
+
+
+    total = setvli(0_kint)
+    write(*, '(a)') '<zzpolynomial>'
+
+    do i = 0, pah%order
+        write(*,'(2x,a)') '<term>'
+        finalZZpolynomial = ''
+        cpos = 1
+        call print_vli_in_string(cpos,finalZZpolynomial,pah%polynomial(i+1))
+        write(*,'(4x,a,i0,a)') '<order>', i, '</order>'
+        write(*,'(4x,a,a,a)')  '<coefficient>', trim(finalZZpolynomial), '</coefficient>'
+        total = addvli(total,pah%polynomial(i+1))
+        write(*,'(2x,a)') '</term>'
+    end do
+
+    finalZZpolynomial=''
+    cpos = 1
+    call print_vli_in_string(cpos,finalZZpolynomial,total)
+    write(*,'(2x,a,a,a)') '<total>',trim(finalZZpolynomial), '</total>'
+    write(*, '(a)') '</zzpolynomial>'
+    return
+
+end subroutine print_ZZ_polynomial_XML
+!####################################################################################
+
+
 
 
 

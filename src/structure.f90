@@ -15,12 +15,6 @@ module structure_m
         logical :: polynomial_computed = .false.
 
         integer, allocatable, dimension(:) :: indexmapping
-        integer :: doublebondnumber
-        integer, allocatable, dimension(:,:) :: doublebondlist
-        integer :: ringnumber
-        integer, allocatable, dimension(:,:) :: ringlist
-        logical :: hasDisconnectedParent
-        integer :: storage_unit
 
         logical :: hasDanglingBond = .false.
         integer :: nextDanglingBond = 0
@@ -33,7 +27,6 @@ module structure_m
     end type
 
     type ::  pah_tree_node
-        !type(varying_string) :: key
         integer :: shared_count = 0
         logical :: hasChild = .false.
         type(structure), pointer :: pah => NULL()
@@ -71,14 +64,6 @@ contains
             deallocate(pah%bondlist)
         end if
 
-        if (options%print_intermediate_structures) then
-            if (allocated(pah%doublebondlist)) then
-                deallocate(pah%doublebondlist)
-            end if
-            if (allocated(pah%ringlist)) then
-                deallocate(pah%ringlist)
-            end if
-        end if
     end subroutine
 
 end module 

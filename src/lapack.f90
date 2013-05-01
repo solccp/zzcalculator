@@ -3,7 +3,7 @@ module LAPACK
     implicit none
 
  private
- public :: syev, my_dsygvd, my_dsyevd, my_dsygv
+ public :: syev
 
 
 contains
@@ -28,79 +28,6 @@ SUBROUTINE SYEV(JOBZ, UPLO, N, P, LDP, EVALS)
         DEALLOCATE(WORK)
 
 END SUBROUTINE
-
-subroutine my_dsyevd(N, A, LDA, W, INFO)
-    integer, intent(in) :: N, LDA
-    double precision, intent(inout) :: A(:,:)
-    double precision, intent(out) :: W(:)
-    integer, intent(out) :: INFO
-    
-    
-    double precision, allocatable :: work(:)
-    integer, allocatable :: iwork(:)
-    double precision :: temp(1)
-    integer :: liwork, lwork
-
-    call dsyevd(1, 'V', 'L', N, A, LDA, W, temp, -1, liwork, -1, INFO)
-    lwork=floor(temp(1))
-    allocate(work(lwork))
-    allocate(iwork(liwork))
-    
-    call dsyevd(1, 'V', 'L', N, A, LDA, W, work, lwork, iwork, liwork, INFO)
-
-    deallocate(work, iwork)
-
-
-
-end subroutine
-
-subroutine my_dsygvd(N, A, LDA, B, LDB, W, INFO)
-    
-    integer, intent(in) :: N, LDA, LDB
-    double precision, intent(inout) :: A(:,:), B(:,:)
-    double precision, intent(out) :: W(:)
-    integer, intent(out) :: INFO
-    
-    
-    double precision, allocatable :: work(:)
-    integer, allocatable :: iwork(:)
-    double precision :: temp(1)
-    integer :: liwork, lwork
-
-    call dsygvd(1, 'V', 'L', N, A, LDA, B, LDB, W, temp, -1, liwork, -1, INFO)
-    lwork=floor(temp(1))
-    allocate(work(lwork))
-    allocate(iwork(liwork))
-    
-    call dsygvd(1, 'V', 'L', N, A, LDA, B, LDB, W, work, lwork, iwork, liwork, INFO)
-
-
-    deallocate(work, iwork)
-
-end subroutine
-subroutine my_dsygv(N, A, LDA, B, LDB, W, INFO)
-    
-    integer, intent(in) :: N, LDA, LDB
-    double precision, intent(inout) :: A(:,:), B(:,:)
-    double precision, intent(out) :: W(:)
-    integer, intent(out) :: INFO
-    
-    
-    double precision, allocatable :: work(:)
-    double precision :: temp(1)
-    integer :: lwork
-
-    call dsygv(1, 'V', 'L', N, A, LDA, B, LDB, W, temp, -1, INFO)
-    lwork=floor(temp(1))
-    allocate(work(lwork))
-    
-    call dsygv(1, 'V', 'L', N, A, LDA, B, LDB, W, work, lwork, INFO)
-
-
-    deallocate(work)
-
-end subroutine
-
 
 
 end module
