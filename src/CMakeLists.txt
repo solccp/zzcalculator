@@ -1,7 +1,7 @@
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
  
-file(GLOB ZZ_polynomial_SOURCES *.f90 *.f95)
+file(GLOB ZZ_polynomial_SOURCES *.F90 *.f90 *.f95 blas/*.f dsyev/*.f)
 
 if(USE_MPI STREQUAL YES)
     LIST(APPEND ZZ_polynomial_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/mpi/zhang.f90 ${CMAKE_CURRENT_SOURCE_DIR}/mpi/mpi_global.f90)
@@ -14,23 +14,17 @@ else()
     endif()
 endif()
 
-
 # Create an executable file called helloworld from sources:
-find_package(LAPACK REQUIRED)
+#find_package(BLAS REQUIRED)
 
 add_executable(ZZ_polynomial ${ZZ_polynomial_SOURCES})
-target_link_libraries(ZZ_polynomial ${LAPACK_LIBRARIES})
-if(USE_MPI STREQUAL YES)
-    set_target_properties(ZZ_polynomial PROPERTIES OUTPUT_NAME "ZZ_polynomial_mpi")
-elseif(USE_OPENMP STREQUAL YES)
+
+if(USE_OPENMP STREQUAL ON)
     set_target_properties(ZZ_polynomial PROPERTIES OUTPUT_NAME "ZZ_polynomial_openmp")
+    add_definitions( -DUSE_OPENMP )
 endif()
 
 
-#message ( "${CMAKE_Fortran_COMPILER_ID}"  )
-#set_target_properties(ZZ_polynomial PROPERTIES LINKER_LANGUAGE Fortran)
-# test whether this is an intel compiler, then use -static-intel when linking
-#if( "${CMAKE_Fortran_COMPILER}" MATCHES "ifort" )
 if( "${CMAKE_Fortran_COMPILER_ID}" MATCHES "Intel" )
     if (CMAKE_BUILD_TYPE STREQUAL Debug)
         set(CMAKE_Fortran_FLAGS_DEBUG "")
@@ -39,9 +33,9 @@ if( "${CMAKE_Fortran_COMPILER_ID}" MATCHES "Intel" )
     endif (CMAKE_BUILD_TYPE STREQUAL Debug)
     
     if (CMAKE_BUILD_TYPE STREQUAL Release)
-        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static-intel -static-libgcc -ipo ")
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static -ipo ")
         set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-ipo -O3 -funroll-loops -no-prec-div")
-        if(USE_OPENMP STREQUAL YES)
+        if(USE_OPENMP STREQUAL ON)
             GET_TARGET_PROPERTY(COMFLAGS ZZ_polynomial COMPILE_FLAGS)
             GET_TARGET_PROPERTY(LINKFLAGS ZZ_polynomial LINK_FLAGS)
             set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "${LINKFLAGS} -openmp")
@@ -76,7 +70,25 @@ if( CMAKE_Fortran_COMPILER_ID STREQUAL G95 )
     endif(CMAKE_BUILD_TYPE STREQUAL Release)
 endif( CMAKE_Fortran_COMPILER_ID STREQUAL G95 )
 
-
+if( CMAKE_Fortran_COMPILER_ID STREQUAL GNU )
+    set(CMAKE_SHARED_LIBRARY_LINK_FLAGS "")
+    if (CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(CMAKE_FLAGS_DEBUG "")
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "")
+        set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-O0 -g3 -ftrace=full")
+    endif(CMAKE_BUILD_TYPE STREQUAL Debug)
+    if (CMAKE_BUILD_TYPE STREQUAL Release)
+        set(CMAKE_FLAGS_RELEASE "")
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "-static")
+        set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "-O3 -funroll-loops")
+    endif(CMAKE_BUILD_TYPE STREQUAL Release)
+	if(USE_OPENMP STREQUAL ON)
+        GET_TARGET_PROPERTY(COMFLAGS ZZ_polynomial COMPILE_FLAGS)
+        GET_TARGET_PROPERTY(LINKFLAGS ZZ_polynomial LINK_FLAGS)
+        set_target_properties(ZZ_polynomial PROPERTIES LINK_FLAGS "${LINKFLAGS} -fopenmp")
+        set_target_properties(ZZ_polynomial PROPERTIES COMPILE_FLAGS "${COMFLAGS} -fopenmp")
+    endif()
+endif( CMAKE_Fortran_COMPILER_ID STREQUAL GNU )
 
 
 INSTALL(TARGETS ZZ_polynomial

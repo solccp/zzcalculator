@@ -24,12 +24,14 @@ macro_ensure_out_of_source_build("${PROJECT_NAME} requires an out of source buil
 
 #find_package( Boost 1.34 COMPONENTS serialization REQUIRED )
 
-
 add_subdirectory(src)
 #SET_TARGET_PROPERTIES(ZZ_polynomial PROPERTIES LINKER_LANGUAGE Fortran)
 
 enable_testing()
 add_subdirectory(test)
+
+
+
 
 SET(CPACK_CMAKE_GENERATOR "Unix Makefiles")
 SET(CPACK_GENERATOR "STGZ;DEB")

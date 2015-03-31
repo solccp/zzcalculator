@@ -5,7 +5,7 @@ module input_m
     use options_m
     use utils_m
     use operator_m
- 
+
     implicit none
 
     real(kreal), allocatable, dimension(:,:), save, target :: ori_geom
@@ -20,6 +20,7 @@ subroutine read_input(input_fname,pah)
 ! filter out only the carbon atoms, and create the topological matrix for it
 !
     use bondlist_m
+    use options_m
     character(len=*), intent(in) :: input_fname
     type(structure), intent(inout) :: pah
 
@@ -34,6 +35,12 @@ subroutine read_input(input_fname,pah)
     integer, allocatable, dimension(:) :: rmap
     real(kreal), dimension(3) :: x
     logical :: inlist, bondfileexists
+
+    !connection table
+    integer :: nConnection
+    integer :: con1, con2
+
+
 
     ! ######################
     ! # read geometry file #
@@ -58,7 +65,7 @@ subroutine read_input(input_fname,pah)
         end if
         ori_geom(:,i) = x(:)
     end do
-    close(20)
+
 
 
     ! ######################
@@ -75,44 +82,8 @@ subroutine read_input(input_fname,pah)
         pah%indexmapping(i) = rmap(i)
     end do
 
-    if (options%print_intermediate_structures) then
-        pah%doublebondnumber = 0
-        allocate(pah%doublebondlist(2,pah%nat))
-        pah%ringnumber = 0
-        allocate(pah%ringlist(6,pah%nat))
-    end if
 
-
-    bondfileexists = .false.
-    if ( options%use_connection_file) then
-        !use connection file
-        open(unit=99, file=trim(options%connection_file))
-        do
-            read(99,*,iostat=errorcode) a1, a2
-            if ( errorcode /= 0 ) then
-                exit
-            end if
-            bondfileexists = .true.
-            if ( a1 > bnat ) then
-                write(*,'(a,i0,a)') "Atom index ", a1, " is greater than the number of atoms, check your connection file"
-                stop
-            end if
-   
-            if ( map(a1) == 0 .or. map(a2) == 0 ) then
-                cycle
-            end if 
-            if (pah%neighbornumber(map(a1)) == 3) then
-                write(*,'(a,i0,a)') "Atom # ", a1, " has too many neighbors, check your connection file"
-                stop
-            end if
-            pah%neighbornumber(map(a1))=pah%neighbornumber(map(a1))+1
-            pah%neighborlist(map(a1),pah%neighbornumber(map(a1)))=map(a2)        
-            pah%neighbornumber(map(a2))=pah%neighbornumber(map(a2))+1
-            pah%neighborlist(map(a2),pah%neighbornumber(map(a2)))=map(a1)        
-        end do  
-        close(99)
-    end if
-
+    bondfileexists = options%read_connection_table
 
     if (.not. bondfileexists ) then
     ! #######################
@@ -128,6 +99,18 @@ subroutine read_input(input_fname,pah)
                 end if
             end do
         end do
+    else
+        read (20, *) nConnection
+        do i=1, nConnection
+            read (20,*) con1, con2
+            if (dist(cnat,con1,con2,geom) < ccdist) then
+                pah%neighbornumber(con1)=pah%neighbornumber(con1)+1
+                pah%neighborlist(con1,pah%neighbornumber(con1))=con2
+                pah%neighbornumber(con2)=pah%neighbornumber(con2)+1
+                pah%neighborlist(con2,pah%neighbornumber(con2))=con1
+            end if
+        end do
+        close(20)
     end if
 
 
@@ -208,9 +191,9 @@ subroutine read_input(input_fname,pah)
 !                if (j == lista(k,i)) inlist=.true.
 !            end do
 !            if (inlist) then
-!                write(22,'(a,3f20.10)')"B",(geom(k,j),k=1,3) 
+!                write(22,'(a,3f20.10)')"B",(geom(k,j),k=1,3)
 !            else
-!                write(22,'(a,3f20.10)')"C",(geom(k,j),k=1,3) 
+!                write(22,'(a,3f20.10)')"C",(geom(k,j),k=1,3)
 !            end if
 !        end do
 !    end do

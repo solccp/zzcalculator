@@ -4,7 +4,7 @@ module decompose_m
     use structure_m
     use operator_m
     use polynomial_m
-    use output_m
+!    use output_m
     use options_m
     implicit none
     
@@ -118,40 +118,6 @@ subroutine split_and_decompose(pah, medat, level)
 
     call split_structure(pah, son1, son2, medat)
 
-    if (options%print_intermediate_structures) then    
-
-    !##########################################
-    !# allocate storage for connection output #
-    !##########################################
-        allocate(son1%doublebondlist(2,size(pah%doublebondlist,2)))
-        allocate(son1%ringlist(6,size(pah%ringlist,2)))
-        allocate(son2%doublebondlist(2,size(pah%doublebondlist,2)))
-        allocate(son2%ringlist(6,size(pah%ringlist,2)))
-
-    !##########################################################
-    ! # fragments only contain the rest connection infomation #
-    !##########################################################
-        son1%doublebondnumber = 0
-        son1%ringnumber = 0
-        son2%doublebondnumber = 0
-        son2%ringnumber = 0
-
-
-    !######################
-    !# open scratch file for sons
-    !######################
-        i = getunit()
-        open(unit=i, status='scratch')
-        son1%storage_unit = i
-        i = getunit()
-        open(unit=i, status='scratch')
-        son2%storage_unit = i
-    
-        son1%hasDisconnectedParent = .true.
-        son2%hasDisconnectedParent = .true.
-    end if
-
-
 ! ###################################################
 ! # find the ZZ polynomials for both son structures #
 ! ###################################################
@@ -162,18 +128,6 @@ subroutine split_and_decompose(pah, medat, level)
 ! # multiply the ZZ polynomials of both son structures #
 ! ######################################################
     call multiply_polynomials(pah,son1,son2)
-
-    if (options%print_intermediate_structures) then
-    !########################################################
-    !# combine all connection info from pah, son1, and son2 #
-    !########################################################
-        call combine_connection_output(pah,son1,son2)
-
-
-        close(son1%storage_unit,status='delete')
-        close(son2%storage_unit,status='delete')
-    end if
-    
 
 ! #################################
 ! # deallocate the son structures #

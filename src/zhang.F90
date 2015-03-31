@@ -1,12 +1,13 @@
 
 subroutine print_usage()
-    write(*, '(1x,a)') "Usage: ZZ_polynomial input.xyz"
+    write(*, '(1x,a)') "Usage: ZZ_polynomial input"
     write(*, '(1x,a)') "Options:"
-    write(*, '(1x,10a)') "    ", "-K", "                 ",  "Compute the number of Kekule structures only"
-    write(*, '(1x,10a)') "    ", "-B", "                 ",  "Enable built-in bondlist generator"
-    write(*, '(1x,10a)') "    ", "-b file", "            ",  "Load user defined bondlist file"
-    write(*, '(1x,10a)') "    ", "-n [number]", "        ",  "The number of pretreatment substructures"
-    
+    write(*, '(1x,10a)') "    ", "-K", "              ",  "Compute the number of Kekule structures only"
+    write(*, '(1x,10a)') "    ", "-B", "              ",  "Enable built-in bondlist generator"
+    write(*, '(1x,10a)') "    ", "-b file", "         ",  "Load user defined bondlist file"
+    write(*, '(1x,10a)') "    ", "-n [number]", "     ",  "The number of pretreatment substructures"
+    write(*, '(1x,10a)') "    ", "-Q", "              ",  "Print the ZZ polynomial in XML format"
+
 end subroutine
 
 !######################### program zhang_polynomial #################################
@@ -16,7 +17,7 @@ program zhang_polynomial
 ! This program calculates the Zhang-Zhang polynomial for benzenoid structures;
 ! the ZZ polynomial contains beside other quantities also the Clar number,
 ! Clar count, and Kekule number of a given structure
-!   
+!
 ! Reference:
 !   I. Gutman, B. Furtula, and A. T. Balaban
 !   Polycyclic Aromatic Compounds 26 pp.17-35, 2006
@@ -29,7 +30,6 @@ program zhang_polynomial
     use database_m
     use tree_m
     use input_m
-    use decompose_print_m
 
     implicit none
     integer :: i, level
@@ -43,7 +43,7 @@ program zhang_polynomial
     character :: okey
     character(len=200) :: dummy
 !========================================
-    
+
     type(pah_tree_node), pointer :: root
     integer :: max_tree_size = 0
     logical :: reach_limit
@@ -55,9 +55,16 @@ program zhang_polynomial
     integer :: max_nat
     real :: avg_nat
     character(len=200) :: mem_used
-    
+
+#ifdef USE_OPENMP
+!=======================================
+    integer :: nthreads, max_threads
+    integer, external :: OMP_GET_MAX_THREADS
+    logical :: thread_set = .false.
+#endif
 !=======================================
 
+    
     argc = command_argument_count()
 
     if (argc < 1) then
@@ -68,26 +75,17 @@ program zhang_polynomial
     call initialize_options()
 
     do
-        okey = getopt('Pfl:b:n:vtp:c:BK')
+#ifdef USE_OPENMP
+        okey = getopt('b:n:vBKXQt:')
+#else
+        okey = getopt('b:n:vBKXQ')
+#endif
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
             stop
         end if
-        
-        if(okey == 'P') then
-            options%print_intermediate_structures = .true.
-        end if
-        if(okey == 'f') then
-            options%force_print_structures = .true.
-        end if
 
-        if(okey == 'l') then
-            read(optarg, *) options%print_order
-            if (options%print_order < 0) then 
-                options%print_order = 0
-            end if
-        end if
         if(okey == 'b') then
             read(optarg, '(a)') options%bondlistfile
             options%has_bondlistfile = .true.
@@ -96,27 +94,10 @@ program zhang_polynomial
             input_fname = optarg
         end if
         if (okey == 'n') then
-!            read(optarg, *) i
-!            max_tree_size = max(max_tree_size, i)
             read(optarg, *) max_tree_size
         end if
         if (okey == 'v') then
             options%verbose = .true.
-        end if
-
-        if (okey == 't') then
-            options%testrun = .true.
-        end if
-        if (okey == 'p') then
-            read(optarg, *) i
-            options%decompose_print = .true.
-            call init_decompose_print('substructures.cml', i)
-        end if
-
-        if (okey == 'c') then
-            read(optarg, '(a)') dummy
-            options%use_connection_file = .true.
-            options%connection_file = trim(dummy)
         end if
 
         if (okey == 'B') then
@@ -127,22 +108,39 @@ program zhang_polynomial
             options%kekule_only = .true.
         end if
 
-!        if(okey == 'd') then
-!            read(optarg, '(a)') dummy
-!            call load_database_from_file(len(trim(dummy)), dummy)
-!            options%use_database = .true.
-!        end if
-!        if(okey == 'c') then
-!            read(optarg, '(a)') options%databasefile
-!            if (len(trim(options%databasefile)) == 0) then
-!                print *, 'database filename is not valid'
-!                stop
-!            end if
-!            options%create_database = .true.
-!            options%use_database = .true.
-!        end if
+        if (okey == 'X') then
+            options%read_connection_table = .true.
+        end if
 
+        if (okey == 'Q') then
+            options%simple_printing = .true.
+        end if
+#ifdef USE_OPENMP
+        if(okey == 't') then
+            nthreads = 0
+            read(optarg, *) nthreads
+            if (nthreads < 1) then
+                nthreads = 1
+            end if
+            max_threads = OMP_GET_MAX_THREADS()
+            if (nthreads > max_threads) then
+                nthreads = max_threads
+            end if
+            thread_set = .true.
+            call omp_set_num_threads(nthreads)
+        end if
+#endif
     end do
+
+
+#ifdef USE_OPENMP
+    if (.not. thread_set ) then
+        nthreads = OMP_GET_MAX_THREADS()
+        if (nthreads > 1) then
+            call omp_set_num_threads(nthreads-1)
+        end if       
+    end if
+#endif
 
 
     call cpu_time(start)
@@ -159,24 +157,15 @@ program zhang_polynomial
 
 
 
-    if ( options%print_intermediate_structures .and. pah%nat > 50 .and. .not. options%force_print_structures ) then
-        print *, 'warning: # of atoms > 50, disabling intermediate structure printing'
-        print *, '  use -P -f option to print the intermediate structures forcely'
-        options%print_intermediate_structures = .false.
-    end if
-
-
     level = 0
 
-    if ( options%decompose_print ) then
-        allocate(root)
-        root%pah => pah
-        call write_decomposed_substructures(root)
-        call clear_tree(root)
-        deallocate(root)
-    else if ( options%print_intermediate_structures .or. max_tree_size <= 1) then
+    if ( max_tree_size <= 1) then
         call find_ZZ_polynomial(pah, level)
-        call print_ZZ_polynomial(pah)
+        if (options%simple_printing) then
+            call print_ZZ_polynomial_XML(pah)
+        else
+            call print_ZZ_polynomial(pah)
+        end if
         call close_file()
     else
         allocate(root)
@@ -191,7 +180,7 @@ program zhang_polynomial
         end if
 
         allocate(pah_ptr_array(total_required_strs))
-        
+
         avg_nat = 0.0
         max_nat = 0
 
@@ -199,7 +188,7 @@ program zhang_polynomial
         do while( database_size > 0)
             i = i + 1
             call getMin(tree_child, node_ptr)
-            if ( .not. associated(node_ptr%ptr) ) then 
+            if ( .not. associated(node_ptr%ptr) ) then
                 total_required_strs = i - 1
                 exit
             end if
@@ -213,34 +202,30 @@ program zhang_polynomial
             call erase_node(tree_child, node_ptr%ptr)
         end do
 
-        if ( options%testrun ) then
-            write(*,'(a, 1x, i0)') 'Number of atoms in structure:', root%pah%nat
-            write(*,'(a, 1x, i0)') 'Size of Decomposed structure database:', total_required_strs
-            write(*,'(a, 1x, i0, 1x, i0)') 'Intermediate structures and number of hits:', total_str, total_hit
-            write(*,'(a, 1x, i0, 1x, i0)') 'Maximum and average number of atoms in decomposed database:', max_nat, &
-            int(avg_nat/real(total_required_strs))
-        else
 !$OMP parallel default(shared) private(i, level) if ( total_required_strs > 500 .or. pah%nat > 300 )
 !$OMP DO SCHEDULE(GUIDED)
-            do i = 1, total_required_strs
-                if ( options%verbose ) then
-                    print *, 'running (', i, '/' , total_required_strs , ')...  (', pah_ptr_array(i)%ptr%nat , ')'
-                end if
-                call find_ZZ_polynomial(pah_ptr_array(i)%ptr, level)
-                if ( options%verbose ) then
-                    call print_ZZ_polynomial(pah_ptr_array(i)%ptr)
-                end if
-            end do
+        do i = 1, total_required_strs
+            if ( options%verbose ) then
+                print *, 'running (', i, '/' , total_required_strs , ')...  (', pah_ptr_array(i)%ptr%nat , ')'
+            end if
+            call find_ZZ_polynomial(pah_ptr_array(i)%ptr, level)
+            if ( options%verbose ) then
+                call print_ZZ_polynomial(pah_ptr_array(i)%ptr)
+            end if
+        end do
 !$OMP END DO
 !$OMP END parallel
 
-            call sum_up(root)
+        call sum_up(root)
 
-            ! ###########################
-            ! # print the ZZ polynomial #
-            ! ###########################
+        ! ###########################
+        ! # print the ZZ polynomial #
+        ! ###########################
+        if (options%simple_printing) then
+            call print_ZZ_polynomial_XML(pah)
+        else
             call print_ZZ_polynomial(pah)
-        end if            
+        end if
         call clear_tree(root)
         deallocate(pah_ptr_array)
         deallocate(root)
@@ -250,7 +235,7 @@ program zhang_polynomial
     ! # find recursively the ZZ polynomial of the given structure #
     ! #############################################################
 
-
+    deallocate(ori_geom)
     call cpu_time(finish)
 
     if ( options%verbose ) then
