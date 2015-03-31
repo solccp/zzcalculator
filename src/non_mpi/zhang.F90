@@ -1,12 +1,22 @@
 
 subroutine print_usage()
-    write(*, '(1x,a)') "Usage: ZZ_polynomial input"
+    write(*, '(1x,a)') "Usage: ZZ_polynomial [options] input"
     write(*, '(1x,a)') "Options:"
-    write(*, '(1x,10a)') "    ", "-K", "              ",  "Compute the number of Kekule structures only"
-    write(*, '(1x,10a)') "    ", "-B", "              ",  "Enable built-in bondlist generator"
-    write(*, '(1x,10a)') "    ", "-b file", "         ",  "Load user defined bondlist file"
-    write(*, '(1x,10a)') "    ", "-n [number]", "     ",  "The number of pretreatment substructures"
-    write(*, '(1x,10a)') "    ", "-Q", "              ",  "Print the ZZ polynomial in XML format"
+    write(*, '(1x,10a)') "    ", "-K", "                ",  "Compute the number of Kekule structures only"
+    write(*, '(1x,10a)') "    ", "-B", "                ",  "Enable built-in bondlist generator"
+    write(*, '(1x,10a)') "    ", "-b file", "           ",  "Load user defined bondlist from {file}"
+    write(*, '(1x,10a)') "    ", "-n [number=5000]", "  ",  "The number of pretreatment substructures"
+    write(*, '(1x,10a)') "    ", "-Q", "                ",  "Print the ZZ polynomial in XML format"
+    write(*, '(1x,10a)') "    ", "-P", "                ",  "Print the intermediate structures for # atoms < 50"
+    write(*, '(1x,10a)') "        ", "-f", "            ",  "Force printing"
+    write(*, '(1x,10a)') "        ", "-l number", "     ",  "Down to {number} levels"
+    write(*, '(1x,10a)') "    ", "-n number", "         ",  "Print the decomposition cml down to {number} levels"
+    write(*, '(1x,10a)') "    ", "-v", "                ",  "Verbose"
+    write(*, '(1x,10a)') "    ", "-X file", "           ",  "Read connection table from {file}"
+    write(*, '(1x,10a)') "    ", "-h", "                ",  "Show this message"
+    
+
+    
 
 end subroutine
 
@@ -30,6 +40,7 @@ program zhang_polynomial
     use database_m
     use tree_m
     use input_m
+    use decompose_print_m
 
     implicit none
     integer :: i, level
@@ -45,7 +56,7 @@ program zhang_polynomial
 !========================================
 
     type(pah_tree_node), pointer :: root
-    integer :: max_tree_size = 0
+    integer :: max_tree_size = 5000
     logical :: reach_limit
     integer :: total_required_strs
     type(rb_treenode_ptr) :: node_ptr
@@ -76,14 +87,28 @@ program zhang_polynomial
 
     do
 #ifdef USE_OPENMP
-        okey = getopt('b:n:vBKXQt:')
+        okey = getopt('Pfl:b:n:vBKXQt:p:h')
 #else
-        okey = getopt('b:n:vBKXQ')
+        okey = getopt('Pfl:b:n:vBKXQp:h')
 #endif
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
             stop
+        end if
+
+        if(okey == 'P') then
+            options%print_intermediate_structures = .true.
+        end if
+        if(okey == 'f') then
+            options%force_print_structures = .true.
+        end if
+
+        if(okey == 'l') then
+            read(optarg, *) options%print_order
+            if (options%print_order < 0) then 
+                options%print_order = 0
+            end if
         end if
 
         if(okey == 'b') then
@@ -112,6 +137,11 @@ program zhang_polynomial
             options%read_connection_table = .true.
         end if
 
+        if (okey == 'h') then
+            call print_usage()
+            stop
+        end if
+
         if (okey == 'Q') then
             options%simple_printing = .true.
         end if
@@ -130,6 +160,11 @@ program zhang_polynomial
             call omp_set_num_threads(nthreads)
         end if
 #endif
+        if (okey == 'p') then
+            read(optarg, *) i
+            options%decompose_print = .true.
+            call init_decompose_print('substructures.cml', i)
+        end if
     end do
 
 
@@ -156,10 +191,21 @@ program zhang_polynomial
     call cut_dangling_bonds(pah)
 
 
+    if ( options%print_intermediate_structures .and. pah%nat > 50 .and. .not. options%force_print_structures ) then
+        print *, 'warning: # of atoms > 50, disabling intermediate structure printing'
+        print *, '  use -P -f option to print the intermediate structures forcely'
+        options%print_intermediate_structures = .false.
+    end if
 
     level = 0
 
-    if ( max_tree_size <= 1) then
+    if ( options%decompose_print ) then
+        allocate(root)
+        root%pah => pah
+        call write_decomposed_substructures(root)
+        call clear_tree(root)
+        deallocate(root)
+    else if ( options%print_intermediate_structures .or. max_tree_size <= 1) then
         call find_ZZ_polynomial(pah, level)
         if (options%simple_printing) then
             call print_ZZ_polynomial_XML(pah)

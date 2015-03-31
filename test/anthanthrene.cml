@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<cml xmlns="http://www.xml-cml.org/schema">
+  <molecule>
+    <comment>SSS</comment>
+    <atomArray>
+      <atom id="a14" elementType="C" x3="      4.849984000000" y3="      0.000000000000" z3="      4.200207000000"/>
+      <atom id="a20" elementType="C" x3="      8.487467000000" y3="      0.000000000000" z3="      2.100103000000"/>
+      <atom id="a19" elementType="C" x3="      8.487467000000" y3="      0.000000000000" z3="      3.500174000000"/>
+      <atom id="a11" elementType="C" x3="      4.849983000000" y3="      0.000000000000" z3="      1.400069000000"/>
+      <atom id="a12" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      2.100103000000"/>
+      <atom id="a13" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      3.500173000000"/>
+      <atom id="a7" elementType="C" x3="      3.637487000000" y3="      0.000000000000" z3="      2.100104000000"/>
+      <atom id="a8" elementType="C" x3="      3.637487000000" y3="      0.000000000000" z3="      3.500173000000"/>
+      <atom id="a17" elementType="C" x3="      7.274973000000" y3="      0.000000000000" z3="      4.200208000000"/>
+      <atom id="a18" elementType="C" x3="      7.274973000000" y3="      0.000000000000" z3="      1.400069000000"/>
+    </atomArray>
+    <bondArray>
+      <bond atomRefs2="a14 a8" order="1"/>
+      <bond atomRefs2="a14 a13" order="1"/>
+      <bond atomRefs2="a20 a18" order="1"/>
+      <bond atomRefs2="a20 a19" order="1"/>
+      <bond atomRefs2="a19 a17" order="1"/>
+      <bond atomRefs2="a19 a20" order="1"/>
+      <bond atomRefs2="a11 a7" order="1"/>
+      <bond atomRefs2="a11 a12" order="1"/>
+      <bond atomRefs2="a12 a11" order="1"/>
+      <bond atomRefs2="a12 a13" order="1"/>
+      <bond atomRefs2="a12 a18" order="1"/>
+      <bond atomRefs2="a13 a12" order="1"/>
+      <bond atomRefs2="a13 a14" order="1"/>
+      <bond atomRefs2="a13 a17" order="1"/>
+      <bond atomRefs2="a7 a8" order="1"/>
+      <bond atomRefs2="a7 a11" order="1"/>
+      <bond atomRefs2="a8 a7" order="1"/>
+      <bond atomRefs2="a8 a14" order="1"/>
+      <bond atomRefs2="a17 a13" order="1"/>
+      <bond atomRefs2="a17 a19" order="1"/>
+      <bond atomRefs2="a18 a12" order="1"/>
+      <bond atomRefs2="a18 a20" order="1"/>
+    </bondArray>
+  </molecule>
+  <molecule>
+    <comment>SSD</comment>
+    <atomArray>
+      <atom id="a20" elementType="C" x3="      8.487467000000" y3="      0.000000000000" z3="      2.100103000000"/>
+      <atom id="a19" elementType="C" x3="      8.487467000000" y3="      0.000000000000" z3="      3.500174000000"/>
+      <atom id="a12" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      2.100103000000"/>
+      <atom id="a13" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      3.500173000000"/>
+      <atom id="a17" elementType="C" x3="      7.274973000000" y3="      0.000000000000" z3="      4.200208000000"/>
+      <atom id="a18" elementType="C" x3="      7.274973000000" y3="      0.000000000000" z3="      1.400069000000"/>
+    </atomArray>
+    <bondArray>
+      <bond atomRefs2="a20 a18" order="1"/>
+      <bond atomRefs2="a20 a19" order="1"/>
+      <bond atomRefs2="a19 a17" order="1"/>
+      <bond atomRefs2="a19 a20" order="1"/>
+      <bond atomRefs2="a12 a13" order="1"/>
+      <bond atomRefs2="a12 a18" order="1"/>
+      <bond atomRefs2="a13 a12" order="1"/>
+      <bond atomRefs2="a13 a17" order="1"/>
+      <bond atomRefs2="a17 a13" order="1"/>
+      <bond atomRefs2="a17 a19" order="1"/>
+      <bond atomRefs2="a18 a12" order="1"/>
+      <bond atomRefs2="a18 a20" order="1"/>
+    </bondArray>
+  </molecule>
+  <molecule>
+    <comment>SSR</comment>
+    <atomArray>
+      <atom id="a20" elementType="C" x3="      8.487467000000" y3="      0.000000000000" z3="      2.100103000000"/>
+      <atom id="a19" elementType="C" x3="      8.487467000000" y3="      0.000000000000" z3="      3.500174000000"/>
+      <atom id="a13" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      3.500173000000"/>
+      <atom id="a17" elementType="C" x3="      7.274973000000" y3="      0.000000000000" z3="      4.200208000000"/>
+      <atom id="a18" elementType="C" x3="      7.274973000000" y3="      0.000000000000" z3="      1.400069000000"/>
+      <atom id="a12" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      2.100103000000"/>
+    </atomArray>
+    <bondArray>
+      <bond atomRefs2="a20 a18" order="1"/>
+      <bond atomRefs2="a20 a19" order="1"/>
+      <bond atomRefs2="a19 a17" order="1"/>
+      <bond atomRefs2="a19 a20" order="1"/>
+      <bond atomRefs2="a13 a12" order="1"/>
+      <bond atomRefs2="a13 a17" order="1"/>
+      <bond atomRefs2="a17 a13" order="1"/>
+      <bond atomRefs2="a17 a19" order="1"/>
+      <bond atomRefs2="a18 a12" order="1"/>
+      <bond atomRefs2="a18 a20" order="1"/>
+      <bond atomRefs2="a12 a13" order="1"/>
+      <bond atomRefs2="a12 a18" order="1"/>
+    </bondArray>
+  </molecule>
+  <molecule>
+    <comment>SDR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>SRR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>DSR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>DDS</comment>
+    <atomArray>
+      <atom id="a14" elementType="C" x3="      4.849984000000" y3="      0.000000000000" z3="      4.200207000000"/>
+      <atom id="a11" elementType="C" x3="      4.849983000000" y3="      0.000000000000" z3="      1.400069000000"/>
+      <atom id="a7" elementType="C" x3="      3.637487000000" y3="      0.000000000000" z3="      2.100104000000"/>
+      <atom id="a8" elementType="C" x3="      3.637487000000" y3="      0.000000000000" z3="      3.500173000000"/>
+      <atom id="a12" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      2.100103000000"/>
+      <atom id="a13" elementType="C" x3="      6.062478000000" y3="      0.000000000000" z3="      3.500173000000"/>
+    </atomArray>
+    <bondArray>
+      <bond atomRefs2="a14 a8" order="1"/>
+      <bond atomRefs2="a14 a13" order="1"/>
+      <bond atomRefs2="a11 a7" order="1"/>
+      <bond atomRefs2="a11 a12" order="1"/>
+      <bond atomRefs2="a7 a8" order="1"/>
+      <bond atomRefs2="a7 a11" order="1"/>
+      <bond atomRefs2="a8 a7" order="1"/>
+      <bond atomRefs2="a8 a14" order="1"/>
+      <bond atomRefs2="a12 a11" order="1"/>
+      <bond atomRefs2="a12 a13" order="1"/>
+      <bond atomRefs2="a13 a12" order="1"/>
+      <bond atomRefs2="a13 a14" order="1"/>
+    </bondArray>
+  </molecule>
+  <molecule>
+    <comment>DDD</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>DDR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>DRR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>RSS</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>RSD</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>RSR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>RDR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+  <molecule>
+    <comment>RRR</comment>
+    <atomArray>
+    </atomArray>
+  </molecule>
+</cml>

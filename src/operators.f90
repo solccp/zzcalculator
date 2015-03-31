@@ -103,6 +103,18 @@ subroutine create_nobond_daughter(pah,bond,atom1,atom2)
 
     allocate(bond%indexmapping(bond%nat))
     bond%indexmapping = pah%indexmapping
+    
+    if (options%print_intermediate_structures) then
+
+        allocate(bond%doublebondlist(2,size(pah%doublebondlist,2))) 
+        allocate(bond%ringlist(6,size(pah%ringlist,2))) 
+        bond%doublebondnumber = pah%doublebondnumber
+        bond%ringnumber = pah%ringnumber
+        bond%doublebondlist = pah%doublebondlist
+        bond%ringlist = pah%ringlist
+        bond%hasDisconnectedParent = pah%hasDisconnectedParent
+        bond%storage_unit = pah%storage_unit
+    end if
 
 
 ! ###############################
@@ -188,6 +200,35 @@ subroutine create_noatoms_daughter(pah,pah1,nelim,delatoms,ring_exist)
     allocate(pah1%indexmapping(pah%nat))
     pah1%indexmapping = pah%indexmapping
 
+    if (options%print_intermediate_structures) then
+        allocate(pah1%doublebondlist(2,size(pah%doublebondlist,2))) 
+        allocate(pah1%ringlist(6,size(pah%ringlist,2))) 
+        pah1%doublebondnumber = pah%doublebondnumber
+        pah1%doublebondlist = pah%doublebondlist
+        pah1%ringnumber = pah%ringnumber
+        pah1%ringlist = pah%ringlist
+        pah1%hasDisconnectedParent = pah%hasDisconnectedParent
+        pah1%storage_unit = pah%storage_unit
+    !###########################################
+    !# add deleted atom to the happy atom list #
+    !###########################################
+        if (ring_exist) then 
+            pah1%ringnumber = pah1%ringnumber+1
+            pah1%ringlist(:,pah1%ringnumber) = pah1%indexmapping(delatoms(1:6))
+        else
+            j = nelim
+            k = 1
+            do while(j>0)
+                pah1%doublebondnumber = pah1%doublebondnumber+1
+                do i=1, 2
+                    pah1%doublebondlist(i,pah1%doublebondnumber) = pah1%indexmapping(delatoms(k))
+                    k = k + 1
+                end do
+                j = j - 2
+            end do
+        end if
+
+    end if
 
 ! #############################
 ! # create the transition map #
@@ -333,6 +374,11 @@ subroutine cut_dangling_bonds(pah)
         if (has_dangling_bonds) then
             atom2 = pah%neighborlist(atom1,1)
             call get_remove_indexes(pah, atom1, atom2, r1, r2)
+            if ( options%print_intermediate_structures) then
+                pah%doublebondnumber = pah%doublebondnumber + 1
+                pah%doublebondlist(1, pah%doublebondnumber) = pah%indexmapping(atom1)
+                pah%doublebondlist(2, pah%doublebondnumber) = pah%indexmapping(atom2)
+            endif
             pah%indexmapping(atom1) = pah%indexmapping(r1)
             pah%indexmapping(atom2) = pah%indexmapping(r2)
 

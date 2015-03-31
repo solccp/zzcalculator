@@ -81,6 +81,13 @@ subroutine read_input(input_fname,pah)
     do i=1, pah%nat
         pah%indexmapping(i) = rmap(i)
     end do
+    
+    if (options%print_intermediate_structures) then
+        pah%doublebondnumber = 0
+        allocate(pah%doublebondlist(2,pah%nat))
+        pah%ringnumber = 0
+        allocate(pah%ringlist(6,pah%nat))
+    end if
 
 
     bondfileexists = options%read_connection_table

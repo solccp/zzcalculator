@@ -33,6 +33,13 @@ subroutine find_ZZ_polynomial(pah,level)
 ! ###########################
     if (pah%nat == 0) then
         call set_polynomial(pah, 1_kint)
+        if (options%print_intermediate_structures) then
+            if (pah%hasDisconnectedParent) then
+                call write_connections_partial(pah)
+            else
+                call write_connections(pah)
+            end if
+        end if
 
 ! ##########################################
 ! # if pah contains an odd number of atoms #

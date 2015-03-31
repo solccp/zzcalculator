@@ -252,7 +252,7 @@ contains
              .not. associated(node%child_ring) .and. .not. &
                 associated(node%child_son1) .and. .not. associated(node%child_son2) ) then
 
-            print *, node%pah%nat
+!            print *, node%pah%nat
             call write_cml_unit(node%pah, unitnum, path)
         end if
 
