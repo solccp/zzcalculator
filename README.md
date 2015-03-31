@@ -8,10 +8,10 @@
     make test
 
 # Enabling OpenMP parallelism
-    "-DUSE_OPENMP=YES"
+    -DUSE_OPENMP=YES
 
 # Changing the install path
-    "-DCMAKE_INSTALL_PREFIX=/path/to/install"
+    -DCMAKE_INSTALL_PREFIX=/path/to/install
 
 #Tested CMake versions:
   - v2.8.2
