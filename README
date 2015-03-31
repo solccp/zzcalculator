@@ -1,14 +1,23 @@
 
 
+# Compile the code:
+    mkdir /path/to/the/build
+    cd /path/to/the/build
+    cmake /path/to/the/code
+    make
+    make test
 
--DCMAKE_INSTALL_PREFIX=/home/sol/local/ZZ_polynomial
--DCMAKE_Fortran_COMPILER=/home/sol/local/openmpi/bin/mpif90
--DUSE_MPI=ON
+# Enabling OpenMP parallelism
+    "-DUSE_OPENMP=YES"
 
-Tested CMake versions:
+# Changing the install path
+    "-DCMAKE_INSTALL_PREFIX=/path/to/install"
+
+#Tested CMake versions:
   - v2.8.2
 
-Tested Compiler Versions and Platforms
+#Tested Compiler Versions and Platforms
+  - gfortran 4.8.2 on Ubuntu 14.04 x86_64
   - Intel Fortran Compiler 12.0 on Ubuntu 10.10 x86_64
   - G95 0.93 on Ubuntu 10.10 x86_64
 
