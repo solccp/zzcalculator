@@ -9,6 +9,9 @@ if(USE_MPI STREQUAL YES)
 else()
     #source_group("special" FILES non_mpi/*.f90)
     LIST(APPEND ZZ_polynomial_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/non_mpi/zhang.f90)
+    if(USE_OPENMP STREQUAL YES)
+        message("Build ZZ_polynomial with OPENMP support.")
+    endif()
 endif()
 
 
