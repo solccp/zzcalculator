@@ -10,7 +10,7 @@ module structure_m
         integer :: order
         type(big_integer), allocatable, dimension(:) :: polynomial
         integer, allocatable, dimension(:,:) :: bondlist
-        integer :: nbondlistentries
+        integer :: nbondlistentries = 0
 
         logical :: polynomial_computed = .false.
 
@@ -19,8 +19,8 @@ module structure_m
         integer, allocatable, dimension(:,:) :: doublebondlist
         integer :: ringnumber
         integer, allocatable, dimension(:,:) :: ringlist
-        logical :: hasDisconnectedParent
-        integer :: storage_unit
+        logical :: hasDisconnectedParent = .false.
+        integer :: storage_unit = 0
 
         logical :: hasDanglingBond = .false.
         integer :: nextDanglingBond = 0
