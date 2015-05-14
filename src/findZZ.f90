@@ -20,7 +20,6 @@ subroutine find_ZZ_polynomial(pah,level)
     integer :: medat
 
 
-    print *, pah%storage_unit
 !    if ( options%decompose_print ) then
 !        if ( level == level_to_print ) then
 !            call write_xyz_unit(pah, unitnum, level, 'Find_ZZ')
@@ -36,10 +35,8 @@ subroutine find_ZZ_polynomial(pah,level)
         call set_polynomial(pah, 1_kint)
         if (options%print_intermediate_structures) then
             if (pah%hasDisconnectedParent) then
-                print *, 'ala3'
                 call write_connections_partial(pah)
             else
-                print *, 'ala4'
                 call write_connections(pah)
             end if
         end if
