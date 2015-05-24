@@ -12,7 +12,7 @@ subroutine print_usage()
     write(*, '(1x,10a)') "        ", "-l number", "     ",  "Down to {number} levels"
     write(*, '(1x,10a)') "    ", "-n number", "         ",  "Print the decomposition cml down to {number} levels"
     write(*, '(1x,10a)') "    ", "-v", "                ",  "Verbose"
-    write(*, '(1x,10a)') "    ", "-X file", "           ",  "Read connection table from {file}"
+    write(*, '(1x,10a)') "    ", "-X", "                ",  "Read connection table from the bottom of the xyz file"
     write(*, '(1x,10a)') "    ", "-h", "                ",  "Show this message"
     
 

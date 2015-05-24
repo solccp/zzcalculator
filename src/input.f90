@@ -107,6 +107,7 @@ subroutine read_input(input_fname,pah)
             end do
         end do
     else
+        nConnection = 0
         read (20, *) nConnection
         do i=1, nConnection
             read (20,*) con1, con2
