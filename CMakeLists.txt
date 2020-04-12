@@ -9,7 +9,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 cmake_minimum_required(VERSION 2.6)
 
 option(PROFILING "set profiling flags" OFF)
-option(USE_OPENMP "enable OpenMP" OFF)
+option(USE_OPENMP "enable OpenMP" ON)
 
 option(USE_MPI "Build parallel version with MPI library" OFF)
 

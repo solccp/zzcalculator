@@ -67,9 +67,10 @@ program zhang_polynomial
     real :: avg_nat
     character(len=200) :: mem_used
 
+    integer :: nthreads, max_threads
+
 #ifdef USE_OPENMP
 !=======================================
-    integer :: nthreads, max_threads
     integer, external :: OMP_GET_MAX_THREADS
     logical :: thread_set = .false.
 #endif
@@ -86,11 +87,7 @@ program zhang_polynomial
     call initialize_options()
 
     do
-#ifdef USE_OPENMP
         okey = getopt('Pfl:b:n:vBKXQt:p:h')
-#else
-        okey = getopt('Pfl:b:n:vBKXQp:h')
-#endif
         if(okey == '>') exit
         if(okey == '!') then
             write(*,*) 'unknown option: ', trim(optarg)
@@ -145,21 +142,27 @@ program zhang_polynomial
         if (okey == 'Q') then
             options%simple_printing = .true.
         end if
-#ifdef USE_OPENMP
+
         if(okey == 't') then
             nthreads = 0
             read(optarg, *) nthreads
             if (nthreads < 1) then
                 nthreads = 1
             end if
+#ifdef USE_OPENMP
             max_threads = OMP_GET_MAX_THREADS()
             if (nthreads > max_threads) then
                 nthreads = max_threads
             end if
             thread_set = .true.
             call omp_set_num_threads(nthreads)
-        end if
+#else
+            nthreads = 1
+            max_threads = 1
 #endif
+
+        end if
+
         if (okey == 'p') then
             read(optarg, *) i
             options%decompose_print = .true.
