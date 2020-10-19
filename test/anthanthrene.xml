@@ -1,0 +1,15 @@
+<zzpolynomial>
+  <term>
+    <order>0</order>
+    <coefficient>10</coefficient>
+  </term>
+  <term>
+    <order>1</order>
+    <coefficient>12</coefficient>
+  </term>
+  <term>
+    <order>2</order>
+    <coefficient>3</coefficient>
+  </term>
+  <total>25</total>
+</zzpolynomial>

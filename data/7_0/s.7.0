@@ -1,0 +1,6 @@
+#!/bin/bash
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+
+time /home/cedziu/aromaticity/bin/zhang > ../results.7_0
