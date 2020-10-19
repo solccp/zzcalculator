@@ -16,5 +16,6 @@
 
 #Tested Compiler Versions and Platforms
   - gfortran 4.8.2 on Ubuntu 14.04 x86_64
+  - gfortran 9.3.0 and 10.2.0 on Ubuntu 20.04 x86_64
   - Intel Fortran Compiler 12.0 on Ubuntu 10.10 x86_64
   - G95 0.93 on Ubuntu 10.10 x86_64
