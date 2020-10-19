@@ -251,8 +251,8 @@ program zhang_polynomial
             call erase_node(tree_child, node_ptr%ptr)
         end do
 
-!$OMP parallel default(shared) private(i, level) if ( total_required_strs > 500 .or. pah%nat > 300 )
-!$OMP DO SCHEDULE(GUIDED)
+!$OMP parallel if ( total_required_strs > 500 .or. pah%nat > 300 )
+!$OMP DO PRIVATE(i, level)
         do i = 1, total_required_strs
             if ( options%verbose ) then
                 print *, 'running (', i, '/' , total_required_strs , ')...  (', pah_ptr_array(i)%ptr%nat , ')'
